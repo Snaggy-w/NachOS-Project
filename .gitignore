@@ -3,4 +3,5 @@ code/bin/coff2noff
 code/bin/*.o
 code/bin/.*.d
 code/bin/.sources-checked
+.vscode
 .DS_Store

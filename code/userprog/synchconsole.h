@@ -4,7 +4,7 @@
 #include "copyright.h"
 #include "utility.h"
 #include "console.h"
-class SynchConsole {
+class SynchConsole: public Console {
 	public:
 		SynchConsole(char *readFile, char *writeFile);
 	// initialize the hardware console device

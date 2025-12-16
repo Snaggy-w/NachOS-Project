@@ -77,11 +77,10 @@ void ConsoleTest(char *in, char *out) {
     for (;;) {
         readAvail->P(); // wait for character to arrive
         ch = console->GetChar();
-	PutChar('<');
+        if (ch == 'q' || ch == EOF || ch == '\n') {PutChar('\n'); return;}; // if q, quit
+	    PutChar('<');
         PutChar(ch); // echo it!
         PutChar('>');
-	writeDone->P();       // wait for write to finish
-        if (ch == 'q')
-            return; // if q, quit
+	    writeDone->P(); // wait for write to finish
     }
 }
