@@ -63,7 +63,10 @@ static void WriteDone(int arg) { writeDone->V(); }
 //      Test the console by echoing characters typed at the input onto
 //      the output.  Stop when the user types a 'q'.
 //----------------------------------------------------------------------
-
+void PutChar(char ch){
+	console->PutChar(ch);
+	for(int i = 0; i < 100; i++){interrupt->OneTick();}
+}
 void ConsoleTest(char *in, char *out) {
     char ch;
 
@@ -74,8 +77,10 @@ void ConsoleTest(char *in, char *out) {
     for (;;) {
         readAvail->P(); // wait for character to arrive
         ch = console->GetChar();
-        console->PutChar(ch); // echo it!
-        writeDone->P();       // wait for write to finish
+	PutChar('<');
+        PutChar(ch); // echo it!
+        PutChar('>');
+	writeDone->P();       // wait for write to finish
         if (ch == 'q')
             return; // if q, quit
     }
