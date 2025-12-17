@@ -21,18 +21,12 @@ SynchConsole::~SynchConsole(){
 	delete readAvail;
 }
 void SynchConsole::SynchPutChar(const char ch){
-	if (ch == 'q' || ch == EOF || ch == '\n') {
-		console->PutChar('\n');
-		return;
-	}
 	console->PutChar(ch);
-	for(int i = 0; i < ConsoleTime; i++) interrupt->OneTick(); 
 	writeDone->P();
 }
 char SynchConsole::SynchGetChar(){
    	readAvail->P();
-    ch = console->GetChar();
-	return ch;
+    return console->GetChar();
 }
 void SynchConsole::SynchPutString(const char s[]){
 // ...
@@ -40,4 +34,4 @@ void SynchConsole::SynchPutString(const char s[]){
 void SynchConsole::SynchGetString(char *s, int n){
 // ...
 }
-#endif CHANGED
+#endif //CHANGED
