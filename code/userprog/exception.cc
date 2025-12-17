@@ -63,6 +63,7 @@ static void UpdatePC() {
 
 void ExceptionHandler(ExceptionType which) {
     int type = machine->ReadRegister(2);
+#ifndef CHANGED
 
     if ((which == SyscallException) && (type == SC_Halt)) {
         DEBUG('a', "Shutdown, initiated by user program.\n");
@@ -71,8 +72,73 @@ void ExceptionHandler(ExceptionType which) {
         printf("Unexpected user mode exception %d %d\n", which, type);
         ASSERT(FALSE);
     }
+#else // CHANGED
 
+/*
+ *
+ *	That is equivalent to an IDT (interrupt descriptor table in a sense)
+ *
+ */
+
+    if(which == SyscallException){
+    	switch(type){
+		
+		case SC_Halt:
+			DEBUG('a', "Shutdown, initiated by user program.\n");
+			interrupt->Halt();
+		break;
+
+		case SC_Exit:
+			Exit(0); // maybe we should update the syscall to also include the exit code from a register?
+		break;
+
+		//case SC_Exec:
+			// We need to implement Exec and figure out argument stuff
+		//break;
+
+		//case SC_Join:
+			// We need to implement Join and and figure out arguments stuff
+		//break;
+
+		//case SC_Create:
+			// We need to implement Create and and figure out arguments stuff
+		//break;
+		
+		//case SC_Open:
+			// We need to implement Open and and figure out arguments stuff
+		//break;
+
+		//case SC_Read:
+			// We need to implement Read and and figure out arguments stuff
+		//break;
+		
+		//case SC_Write:
+			// We need to implement Write and and figure out arguments stuff
+		//break;
+		
+		//case SC_Close:
+			// We need to implement Close and and figure out arguments stuff
+		//break;
+
+		case SC_Fork:
+			//VoidFunctionPtr fn_ptr = (VoidFunctionPtr)machine->ReadRegister(4);
+			//Thread *t = new Thread("Forked Thread");
+			//t->Fork(fn_ptr, (int)fn_ptr);
+		break;
+
+		case SC_Yield:
+			//currentThread->Yield();	
+		break;
+
+		case SC_PutChar:
+			// For now it does nothing
+		break;
+
+	}
+    }
     // LB: Do not forget to increment the pc before returning!
     UpdatePC();
     // End of addition
 }
+
+#endif // CHANGED

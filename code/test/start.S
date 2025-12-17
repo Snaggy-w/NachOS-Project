@@ -129,6 +129,22 @@ Yield:
 	j	$31
 	.end Yield
 
+	
+/*
+ *
+ * The PutChar stub, it will be triggered by the system call SC_PutChar defined
+ * in userprog/syscall.h as syscall 11
+ *
+ *
+*/
+	.globl  PutChar
+	.ent	PutChar
+PutChar:
+	addiu $2, $0,SC_PutChar
+	syscall
+	j	$31
+	.end PutChar
+	
 /* dummy function to keep gcc happy */
         .globl  __main
         .ent    __main
