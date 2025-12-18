@@ -48,7 +48,7 @@ void SynchConsole::copyStringFromMachine( int from, char *to, unsigned size) {
 void SynchConsole::SynchPutString(const char s[]){
 	copyStringFromMachine((int)s, STRING_BUFFER, MAX_STRING_SIZE);
 	unsigned int i = 0;
-	while (STRING_BUFFER[i] != '\0' && i != MAX_STRING_SIZE) {
+	while (STRING_BUFFER[i] != '\0' && i < MAX_STRING_SIZE) {
 		SynchPutChar(STRING_BUFFER[i]);
 		i++;
 	}
@@ -74,8 +74,41 @@ void SynchConsole::SynchGetString(char *s, int n){
 	}
 	machine->WriteMem((int)(s+i),1,0); // \0 
 
-	// Machine::WriteMem(int addr, int size, int value)
+}
 
+void SynchConsole::SynchPutInt(int n){
+	// max sined value is 2147483647 -> 10 characters max
+	char txt[12]; // account for minus character and Null terminator
+	snprintf(txt,sizeof(txt),"%d",n);
+	// Beware that we cannot reuse SynchPutString here since it assumes a string comming from user space
+	// Here the string is created in kernel space
+	for (unsigned i = 0; txt[i] != '\0'; i++) {
+        	this->SynchPutChar(txt[i]);
+    	}
+}
 
+void SynchConsole::SynchGetInt(int *n){
+	int i = 0;
+	char s[12];
+	while (i < 11) {
+		char ch = SynchGetChar();
+		if(ch < 48 || ch > 57) // The character is not a number
+			break;
+		 
+		s[i] = ch;
+		i++;
+	}
+	s[i] = '\0';
+	
+	/*
+	 * In case of input that starts with a non-numerical value -> s = '\0'
+	 * sscanf will fail and return 0 and not write to the buffer n
+	 * so n will contain garbage data since it is not initialized
+	 * 
+	 * To fix this issue we add a check on the return of sscanf and in case of failure, initialize the buffer with 0 
+	 */
+
+	if(sscanf(s,"%d",n) != 1)
+		*n = 0;
 }
 #endif //CHANGED

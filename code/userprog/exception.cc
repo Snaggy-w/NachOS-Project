@@ -153,6 +153,17 @@ void ExceptionHandler(ExceptionType which) {
 			machine->WriteRegister(2, (int)s);
 			break;
 		}
+		case SC_PutInt: {
+			int n = (int)machine->ReadRegister(4);
+			synchconsole->SynchPutInt(n);
+			break;
+		}
+		case SC_GetInt: {
+			int  n;
+			synchconsole->SynchGetInt(&n);
+			machine->WriteRegister(2,n);
+			break;
+		}
 		default: {
 			printf("Unexpected user mode exception %d %d\n", which, type);
 			ASSERT(FALSE);
