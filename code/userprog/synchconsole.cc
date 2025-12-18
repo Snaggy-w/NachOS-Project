@@ -14,6 +14,7 @@ SynchConsole::SynchConsole(char *readFile, char *writeFile){
 	readAvail = new Semaphore("read avail", 0);
 	writeDone = new Semaphore("write done", 0);
 	console = new Console(readFile, writeFile, ReadAvail, WriteDone, 0);
+	// initialize locks ??
 }
 SynchConsole::~SynchConsole(){
 	delete console;
@@ -47,13 +48,34 @@ void SynchConsole::copyStringFromMachine( int from, char *to, unsigned size) {
 void SynchConsole::SynchPutString(const char s[]){
 	copyStringFromMachine((int)s, STRING_BUFFER, MAX_STRING_SIZE);
 	unsigned int i = 0;
-	while (STRING_BUFFER[i] != '\0' || i == MAX_STRING_SIZE) {
+	while (STRING_BUFFER[i] != '\0' && i != MAX_STRING_SIZE) {
 		SynchPutChar(STRING_BUFFER[i]);
 		i++;
 	}
 	memset(STRING_BUFFER,'\0', MAX_STRING_SIZE);
 }
 void SynchConsole::SynchGetString(char *s, int n){
-// ...
+	int i = 0;
+	while (i < n) {
+		char ch = SynchGetChar();
+		if (ch == EOF) {
+			i++;
+			break;
+		} 
+		if (ch == '\n'){
+			//s[i] = ch;
+			machine->WriteMem((int)(s+i),1,(int)ch);
+			i++;
+			break;
+		} 
+		//s[i] = ch;
+		machine->WriteMem((int)(s+i),1,(int)ch);
+		i++;
+	}
+	machine->WriteMem((int)(s+i),1,0); // \0 
+
+	// Machine::WriteMem(int addr, int size, int value)
+
+
 }
 #endif //CHANGED
