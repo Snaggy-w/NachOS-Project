@@ -120,19 +120,26 @@ void ExceptionHandler(ExceptionType which) {
 			// We need to implement Close and and figure out arguments stuff
 		//break;
 
-		case SC_Fork:
-			//VoidFunctionPtr fn_ptr = (VoidFunctionPtr)machine->ReadRegister(4);
-			//Thread *t = new Thread("Forked Thread");
-			//t->Fork(fn_ptr, (int)fn_ptr);
-		break;
+		case SC_Fork: {
+			VoidFunctionPtr fn_ptr = (VoidFunctionPtr)machine->ReadRegister(4);
+			Thread *t = new Thread("Forked Thread");
+			t->Fork(fn_ptr, (int)fn_ptr);
+			break;
+		}
 
-		case SC_Yield:
-			//currentThread->Yield();	
-		break;
-
-		case SC_PutChar:
-			// For now it does nothing
-		break;
+		case SC_Yield: {
+			currentThread->Yield();	
+			break;
+		}
+		case SC_PutChar: {
+			char ch = (char)machine->ReadRegister(4);
+			synchconsole->SynchPutChar(ch);
+			break;
+		}
+		default: {
+			printf("Unexpected user mode exception %d %d\n", which, type);
+			ASSERT(FALSE);
+		}
 
 	}
     }

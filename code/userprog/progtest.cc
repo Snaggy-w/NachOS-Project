@@ -86,7 +86,8 @@ void ConsoleTest(char *in, char *out) {
 
 void SynchConsoleTest(char *in, char *out){
     char ch;
-    SynchConsole *synchconsole = new SynchConsole(in, out);
+    //SynchConsole *synchconsole = new SynchConsole(in, out);
+    synchconsole = new SynchConsole(in, out); // synchconsole object already globaly defined now
     ch = synchconsole->SynchGetChar();
     while (ch != EOF && ch != 'q') {
         synchconsole->SynchPutChar(ch);
