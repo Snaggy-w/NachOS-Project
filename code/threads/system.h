@@ -31,6 +31,7 @@ extern Timer *timer;                // the hardware alarm clock
 
 #define MAX_STRING_SIZE 201 // Can't put more since large sizes can crash the kernel stack
 			    // the last byte is to account for the Null byte terminator at the end
+
 #ifdef USER_PROGRAM
 #include "machine.h"
 extern Machine *machine; // user program memory and registers
@@ -39,6 +40,7 @@ extern Machine *machine; // user program memory and registers
  * A global extern of class instances like the console should be done here and initialized in the header file "system.cc"
  */
 extern SynchConsole *synchconsole;
+extern char * STRING_BUFFER;
 #endif
 
 #ifdef FILESYS_NEEDED // FILESYS or FILESYS_STUB

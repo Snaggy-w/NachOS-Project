@@ -18,7 +18,7 @@ Interrupt *interrupt;        // interrupt status
 Statistics *stats;           // performance metrics
 Timer *timer;                // the hardware timer device,
                              // for invoking context switches
-
+char * STRING_BUFFER;
 #ifdef FILESYS_NEEDED
 FileSystem *fileSystem;
 #endif
@@ -83,7 +83,7 @@ void Initialize(int argc, char **argv) {
     int argCount;
     const char *debugArgs = "";
     bool randomYield = FALSE;
-
+    STRING_BUFFER = (char* )malloc(MAX_STRING_SIZE);
 #ifdef USER_PROGRAM
     bool debugUserProg = FALSE; // single step user program
 #endif
@@ -185,6 +185,7 @@ void Cleanup() {
 #ifdef USER_PROGRAM
     delete machine;
     delete synchconsole;
+    delete STRING_BUFFER;
 #endif
 
 #ifdef FILESYS_NEEDED
