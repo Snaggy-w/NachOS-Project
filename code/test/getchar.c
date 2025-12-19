@@ -3,7 +3,7 @@
 
 int main()
 {
-char ch = GetChar();
+int ch = GetChar();
 PutChar(ch);
 Halt();
 }

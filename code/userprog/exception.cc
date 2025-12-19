@@ -164,6 +164,10 @@ void ExceptionHandler(ExceptionType which) {
 			machine->WriteRegister(2,n);
 			break;
 		}
+		case SC_feof: {
+			machine->WriteRegister(2,synchconsole->feof());
+	  		break;		
+		}
 		default: {
 			printf("Unexpected user mode exception %d %d\n", which, type);
 			ASSERT(FALSE);

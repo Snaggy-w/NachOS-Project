@@ -25,9 +25,22 @@ void SynchConsole::SynchPutChar(const char ch){
 	console->PutChar(ch);
 	writeDone->P();
 }
-char SynchConsole::SynchGetChar(){
+
+bool SynchConsole::feof() const {
+	return this->eof;
+}
+
+int SynchConsole::SynchGetChar(){
    	readAvail->P();
-    return console->GetChar();
+
+        int ch = console->GetChar();
+
+	if(ch == -1){
+		eof = true;
+		return EOF;
+	}
+
+	return ch & 0xFF;
 }
 
 void SynchConsole::copyStringFromMachine( int from, char *to, unsigned size) {
@@ -57,7 +70,7 @@ void SynchConsole::SynchPutString(const char s[]){
 void SynchConsole::SynchGetString(char *s, int n){
 	int i = 0;
 	while (i < n) {
-		char ch = SynchGetChar();
+		int ch = SynchGetChar();
 		if (ch == EOF) {
 			i++;
 			break;

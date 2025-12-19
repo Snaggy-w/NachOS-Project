@@ -186,6 +186,15 @@ GetInt:
 	j	$31
 	.end GetInt
 
+	.globl  feof
+	.ent	feof
+feof: // kernel based state getter, return whether a real EOF is detected regardless of encoding (hopefully)
+	addiu $2, $0,SC_feof
+	syscall
+	j	$31
+	.end feof
+
+
 /* dummy function to keep gcc happy */
         .globl  __main
         .ent    __main

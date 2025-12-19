@@ -34,6 +34,7 @@
 #define SC_GetString 14
 #define SC_PutInt 15
 #define SC_GetInt 16
+#define SC_feof 17
 
 #ifdef IN_USER_MODE
 
@@ -132,6 +133,7 @@ int GetChar();
 char * GetString(char *s, int n);
 void PutInt(int n);
 int GetInt();
+int feof();
 #endif // IN_USER_MODE
 
 #endif /* SYSCALL_H */
