@@ -168,6 +168,10 @@ void ExceptionHandler(ExceptionType which) {
 			machine->WriteRegister(2,synchconsole->feof());
 	  		break;		
 		}
+		// case SC_UserThreadCreate: {
+		// 	int n = (int)machine->ReadRegister(4);
+		// 	break;
+		// }
 		default: {
 			printf("Unexpected user mode exception %d %d\n", which, type);
 			ASSERT(FALSE);
