@@ -13,6 +13,7 @@
 #include "copyright.h"
 #include "synch.h"
 #include "system.h"
+#include "synchconsole.h"
 
 //----------------------------------------------------------------------
 // StartProcess
@@ -63,7 +64,6 @@ static void WriteDone(int arg) { writeDone->V(); }
 //      Test the console by echoing characters typed at the input onto
 //      the output.  Stop when the user types a 'q'.
 //----------------------------------------------------------------------
-
 void ConsoleTest(char *in, char *out) {
     char ch;
 
@@ -72,11 +72,28 @@ void ConsoleTest(char *in, char *out) {
     writeDone = new Semaphore("write done", 0);
 
     for (;;) {
-        readAvail->P(); // wait for character to arrive
+        readAvail->P();
         ch = console->GetChar();
-        console->PutChar(ch); // echo it!
-        writeDone->P();       // wait for write to finish
-        if (ch == 'q')
-            return; // if q, quit
+        if (ch == 'q' || ch == EOF || ch == '\n') {console->PutChar('\n'); return;}; 
+	    console->PutChar('<');
+        writeDone->P(); 
+        console->PutChar(ch); 
+        writeDone->P(); 
+        console->PutChar('>');
+	    writeDone->P(); 
     }
 }
+
+void SynchConsoleTest(char *in, char *out){
+    char ch;
+    //SynchConsole *synchconsole = new SynchConsole(in, out);
+    synchconsole = new SynchConsole(in, out); // synchconsole object already globaly defined now
+    ch = synchconsole->SynchGetChar();
+    while (ch != EOF && ch != 'q') {
+        synchconsole->SynchPutChar(ch);
+        ch = synchconsole->SynchGetChar();
+    }       
+    synchconsole->SynchPutChar('\n');
+    fprintf(stdout, "Solaris: EOF detected in SynchConsole!\n");
+}
+

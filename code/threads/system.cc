@@ -18,7 +18,7 @@ Interrupt *interrupt;        // interrupt status
 Statistics *stats;           // performance metrics
 Timer *timer;                // the hardware timer device,
                              // for invoking context switches
-
+char * STRING_BUFFER;
 #ifdef FILESYS_NEEDED
 FileSystem *fileSystem;
 #endif
@@ -33,6 +33,15 @@ Machine *machine;   // user program memory and registers
 
 #ifdef NETWORK
 PostOffice *postOffice;
+#endif
+
+#ifdef CHANGED
+#ifdef USER_PROGRAM
+/*
+ * A declaration of the class instances should be defined here and initialized/destroyed below
+ */
+SynchConsole *synchconsole;
+#endif
 #endif
 
 // External definition, to allow us to take a pointer to this function
@@ -74,7 +83,7 @@ void Initialize(int argc, char **argv) {
     int argCount;
     const char *debugArgs = "";
     bool randomYield = FALSE;
-
+    STRING_BUFFER = (char* )malloc(MAX_STRING_SIZE);
 #ifdef USER_PROGRAM
     bool debugUserProg = FALSE; // single step user program
 #endif
@@ -143,6 +152,11 @@ void Initialize(int argc, char **argv) {
 
 #ifdef USER_PROGRAM
     machine = new Machine(debugUserProg); // this must come first
+    /* Dec 18 - 2025 @ 07:06
+     * The initialization of this function must be improved to also allow files... maybe
+     * Or maybe create a separate systemcall for files... To discuss
+     */
+    synchconsole = new SynchConsole(NULL,NULL);
 #endif
 
 #ifdef FILESYS
@@ -170,6 +184,8 @@ void Cleanup() {
 
 #ifdef USER_PROGRAM
     delete machine;
+    delete synchconsole;
+    delete STRING_BUFFER;
 #endif
 
 #ifdef FILESYS_NEEDED

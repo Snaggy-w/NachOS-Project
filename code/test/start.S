@@ -129,6 +129,80 @@ Yield:
 	j	$31
 	.end Yield
 
+	
+/*
+ *
+ * The PutChar stub, it will be triggered by the system call SC_PutChar defined
+ * in userprog/syscall.h as syscall 11
+ *
+ *
+*/
+	.globl  PutChar
+	.ent	PutChar
+PutChar:
+	addiu $2, $0,SC_PutChar
+	syscall
+	j	$31
+	.end PutChar
+
+
+	.globl  PutString
+	.ent	PutString
+PutString:
+	addiu $2, $0,SC_PutString
+	syscall
+	j	$31
+	.end PutString
+
+	.globl  GetChar
+	.ent	GetChar
+GetChar:
+	addiu $2, $0,SC_GetChar
+	syscall
+	j	$31
+	.end GetChar
+
+	.globl  GetString
+	.ent	GetString
+GetString:
+	addiu $2, $0,SC_GetString
+	syscall
+	j	$31
+	.end GetString
+
+	.globl  PutInt
+	.ent	PutInt
+PutInt:
+	addiu $2, $0,SC_PutInt
+	syscall
+	j	$31
+	.end PutInt
+
+	.globl  GetInt
+	.ent	GetInt
+GetInt:
+	addiu $2, $0,SC_GetInt
+	syscall
+	j	$31
+	.end GetInt
+
+	.globl  feof
+	.ent	feof
+feof: // kernel based state getter, return whether a real EOF is detected regardless of encoding (hopefully)
+	addiu $2, $0,SC_feof
+	syscall
+	j	$31
+	.end feof
+
+	.globl  UserThreadCreate
+	.ent	UserThreadCreate
+UserThreadCreate: // kernel based state getter, return whether a real EOF is detected regardless of encoding (hopefully)
+	addiu $2, $0, SC_UserThreadCreate
+	syscall
+	j	$31
+	.end UserThreadCreate
+
+
 /* dummy function to keep gcc happy */
         .globl  __main
         .ent    __main

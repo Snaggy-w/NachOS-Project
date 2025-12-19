@@ -14,7 +14,6 @@
 #define SYSCALLS_H
 
 #include "copyright.h"
-
 /* system call codes -- used by the stubs to tell the kernel which system call
  * is being asked for
  */
@@ -29,6 +28,14 @@
 #define SC_Close 8
 #define SC_Fork 9
 #define SC_Yield 10
+#define SC_PutChar 11
+#define SC_PutString 12
+#define SC_GetChar 13
+#define SC_GetString 14
+#define SC_PutInt 15
+#define SC_GetInt 16
+#define SC_feof 17
+#define SC_UserThreadCreate 18
 
 #ifdef IN_USER_MODE
 
@@ -44,7 +51,6 @@
  * are then invoked in the Nachos kernel, after appropriate error checking,
  * from the system call entry point in exception.cc.
  */
-
 /* Stop Nachos, and print out performance stats */
 void Halt() __attribute__((noreturn));
 
@@ -122,7 +128,14 @@ void Fork(void (*func)());
  * or not.
  */
 void Yield();
-
+void PutChar(char ch);
+void PutString(const char s[]);
+int GetChar();
+char * GetString(char *s, int n);
+void PutInt(int n);
+int GetInt();
+int feof();
+int UserThreadCreate(void f(void *arg), void *arg);
 #endif // IN_USER_MODE
 
 #endif /* SYSCALL_H */
