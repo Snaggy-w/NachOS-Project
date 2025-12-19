@@ -35,6 +35,7 @@
 #define SC_PutInt 15
 #define SC_GetInt 16
 #define SC_feof 17
+#define SC_UserThreadCreate 18
 
 #ifdef IN_USER_MODE
 
@@ -134,6 +135,7 @@ char * GetString(char *s, int n);
 void PutInt(int n);
 int GetInt();
 int feof();
+int UserThreadCreate(void f(void *arg), void *arg);
 #endif // IN_USER_MODE
 
 #endif /* SYSCALL_H */
