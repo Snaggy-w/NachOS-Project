@@ -196,13 +196,21 @@ feof: // kernel based state getter, return whether a real EOF is detected regard
 
 	.globl  UserThreadCreate
 	.ent	UserThreadCreate
-UserThreadCreate: // kernel based state getter, return whether a real EOF is detected regardless of encoding (hopefully)
+UserThreadCreate: 
 	addiu $2, $0, SC_UserThreadCreate
 	syscall
 	j	$31
 	.end UserThreadCreate
 
 
+	.globl  UserThreadExit
+	.ent	UserThreadExit
+UserThreadExit: 
+	addiu $2, $0, SC_UserThreadExit
+	syscall
+	j	$31
+	.end UserThreadExit
+	
 /* dummy function to keep gcc happy */
         .globl  __main
         .ent    __main
