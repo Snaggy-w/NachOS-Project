@@ -86,7 +86,8 @@ void ExceptionHandler(ExceptionType which) {
 		
 		case SC_Halt:
 			DEBUG('a', "Shutdown, initiated by user program.\n");
-			interrupt->Halt();
+			//interrupt->Halt();
+			do_Halt(); // Account for multi-threaded implementation
 		break;
 
 		case SC_Exit:
@@ -170,11 +171,15 @@ void ExceptionHandler(ExceptionType which) {
 	  		break;		
 		}
 		case SC_UserThreadCreate: {
-			// TO COMPLETE 
+			int f = (int)machine->ReadRegister(4);
+			int arg = (int)machine->ReadRegister(5);
+			int res = do_UserThreadCreate(f,arg);
+			// return the result back to the user
+			machine->WriteRegister(2,res);
 			break;
 		}
 		case SC_UserThreadExit: {
-			// TO COMPLETE 
+			do_UserThreadExit();
 			break;
 		}
 		default: {

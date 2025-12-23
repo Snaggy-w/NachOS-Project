@@ -4,8 +4,22 @@
 #include "thread.h"
 #include "system.h"
 #include "machine.h"
+#include "synch.h"
 
-extern void StartUserThread();
+/* UserThreadBundle
+ *	Structure to bundle the properties of the user thread
+ *		- f: Address of the user function
+ *		- arg: an argument (could be expanded to support multiple args via a list)
+ *		- stack: stack pointer
+ */
+typedef struct UserThreadBundle {
+	int f;
+	int arg;
+	int stack;
+} UserThreadBundle_t;
+
+extern void StartUserThread(int f);
 extern int do_UserThreadCreate(int f, int arg);
-
+extern void do_UserThreadExit();
+extern void do_Halt();
 #endif

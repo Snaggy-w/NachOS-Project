@@ -6,6 +6,7 @@
 
 static Semaphore *readAvail;
 static Semaphore *writeDone;
+static Semaphore *consoleLock; // A lock to block other threads from calling PutChar before the function is finished
 
 static void ReadAvail(int arg) { readAvail->V(); }
 static void WriteDone(int arg) { writeDone->V(); }
@@ -13,6 +14,7 @@ static void WriteDone(int arg) { writeDone->V(); }
 SynchConsole::SynchConsole(char *readFile, char *writeFile){
 	readAvail = new Semaphore("read avail", 0);
 	writeDone = new Semaphore("write done", 0);
+	consoleLock = new Semaphore("Console Lock",1);
 	console = new Console(readFile, writeFile, ReadAvail, WriteDone, 0);
 	// initialize locks ??
 }
@@ -20,10 +22,13 @@ SynchConsole::~SynchConsole(){
 	delete console;
 	delete writeDone;
 	delete readAvail;
+	delete consoleLock;
 }
 void SynchConsole::SynchPutChar(const char ch){
+	consoleLock->P(); // lock access to the console
 	console->PutChar(ch);
 	writeDone->P();
+	consoleLock->V();
 }
 
 bool SynchConsole::feof() const {

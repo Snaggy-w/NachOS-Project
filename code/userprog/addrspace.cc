@@ -177,3 +177,7 @@ void AddrSpace::RestoreState() {
     machine->pageTable = pageTable;
     machine->pageTableSize = numPages;
 }
+
+unsigned int AddrSpace::GetNumPages() {
+	return numPages;
+}
