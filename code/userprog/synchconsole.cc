@@ -11,18 +11,25 @@ static Semaphore *consoleLock; // A lock to block other threads from calling Put
 static void ReadAvail(int arg) { readAvail->V(); }
 static void WriteDone(int arg) { writeDone->V(); }
 
+static Lock *stringBuffLock; // Lock to protect the string buffer
+static Lock *stringConsoleLock; // Lock to avoid race conditions on reading strings
+
 SynchConsole::SynchConsole(char *readFile, char *writeFile){
 	readAvail = new Semaphore("read avail", 0);
 	writeDone = new Semaphore("write done", 0);
 	consoleLock = new Semaphore("Console Lock",1);
 	console = new Console(readFile, writeFile, ReadAvail, WriteDone, 0);
 	// initialize locks ??
+	stringBuffLock = new Lock("String output Buffer Lock");
+	stringConsoleLock = new Lock("console string reading lock");
 }
 SynchConsole::~SynchConsole(){
 	delete console;
 	delete writeDone;
 	delete readAvail;
 	delete consoleLock;
+	delete stringBuffLock;
+	delete stringConsoleLock;
 }
 void SynchConsole::SynchPutChar(const char ch){
 	consoleLock->P(); // lock access to the console
@@ -64,34 +71,40 @@ void SynchConsole::copyStringFromMachine( int from, char *to, unsigned size) {
 }
 
 void SynchConsole::SynchPutString(const char s[]){
-	copyStringFromMachine((int)s, STRING_BUFFER, MAX_STRING_SIZE);
-	unsigned int i = 0;
-	while (STRING_BUFFER[i] != '\0' && i < MAX_STRING_SIZE) {
-		SynchPutChar(STRING_BUFFER[i]);
-		i++;
-	}
-	memset(STRING_BUFFER,'\0', MAX_STRING_SIZE);
+	// making put string thread safe with a lock
+	// The copy and memset functions completely overwrite the buffer corrupting data
+	// so they have to be in a critical section
+	stringBuffLock->Acquire(); {
+		copyStringFromMachine((int)s, STRING_BUFFER, MAX_STRING_SIZE);
+		unsigned int i = 0;
+		while (STRING_BUFFER[i] != '\0' && i < MAX_STRING_SIZE) {
+			SynchPutChar(STRING_BUFFER[i]);
+			i++;
+		}
+		memset(STRING_BUFFER,'\0', MAX_STRING_SIZE);
+	} stringBuffLock->Release();
 }
 void SynchConsole::SynchGetString(char *s, int n){
-	int i = 0;
-	while (i < n) {
-		int ch = SynchGetChar();
-		if (ch == EOF) {
-			i++;
-			break;
-		} 
-		if (ch == '\n'){
+	stringConsoleLock->Acquire(); {
+		int i = 0;
+		while (i < n) {
+			int ch = SynchGetChar();
+			if (ch == EOF) {
+				i++;
+				break;
+			} 
+			if (ch == '\n'){
+				//s[i] = ch;
+				machine->WriteMem((int)(s+i),1,(int)ch);
+				i++;
+				break;
+			} 
 			//s[i] = ch;
 			machine->WriteMem((int)(s+i),1,(int)ch);
 			i++;
-			break;
-		} 
-		//s[i] = ch;
-		machine->WriteMem((int)(s+i),1,(int)ch);
-		i++;
-	}
-	machine->WriteMem((int)(s+i),1,0); // \0 
-
+		}
+		machine->WriteMem((int)(s+i),1,0); // \0 
+	} stringConsoleLock->Release();
 }
 
 void SynchConsole::SynchPutInt(int n){
