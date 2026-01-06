@@ -22,4 +22,12 @@ extern void StartUserThread(int f);
 extern int do_UserThreadCreate(int f, int arg);
 extern void do_UserThreadExit();
 extern void do_Halt();
+
+
+// Semaphore exports to user space
+
+extern int do_SemInit(int semVal);
+extern int do_SemWait(int sem_id);
+extern int do_SemPost(int sem_id);
+extern int do_SemDestroy(int sem_id);
 #endif

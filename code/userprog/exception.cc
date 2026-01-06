@@ -182,6 +182,29 @@ void ExceptionHandler(ExceptionType which) {
 			do_UserThreadExit();
 			break;
 		}
+		case SC_SemInit: {
+			int userSemAddr = (int)machine->ReadRegister(4);
+			int SemVal = (int)machine->ReadRegister(5);
+			int sem_val = do_SemInit(SemVal);
+			machine->WriteMem(userSemAddr, sizeof(int), sem_val);
+			break;
+		}
+		case SC_SemWait: {
+			int sem_id = (int)machine->ReadRegister(4);
+			do_SemWait(sem_id);
+			break;
+		}
+		case SC_SemPost: {
+			int sem_id = (int)machine->ReadRegister(4);
+			do_SemPost(sem_id);
+			break;
+		}
+		case SC_SemDestroy: {
+			int sem_id = (int)machine->ReadRegister(4);
+			do_SemDestroy(sem_id);
+			break;
+
+		}
 		default: {
 			printf("Unexpected user mode exception %d %d\n", which, type);
 			ASSERT(FALSE);

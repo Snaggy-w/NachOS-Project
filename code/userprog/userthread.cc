@@ -122,3 +122,125 @@ void do_Halt(){
 
 	interrupt->Halt();
 }
+
+
+
+
+// Implementation of kernel to user mapped semaphores
+
+
+typedef struct semEntry{
+	int id;
+	Semaphore *sem;
+	struct semEntry *next;
+}semEntry_t;
+
+static Lock *semListLock = new Lock("sem list lock"); // Lock to protect the linked list
+semEntry_t semListHead = {
+	.id = -1,
+	.sem = nullptr,
+	.next = nullptr
+};
+static int nextSemId = 0;
+
+
+// Linked list to hold semaphores for user space with a dummy head
+semEntry_t *semList = &semListHead;
+
+/*
+ *
+ * Initializes a new kernel Semaphore and returns the identifier of that semaphore
+ * Prepend the node to the list
+ */
+int do_SemInit(int semVal){
+    semListLock->Acquire();
+
+    semEntry_t *node = new semEntry_t;
+    node->id = nextSemId++;
+    node->sem = new Semaphore("user sem", semVal);
+    node->next = semList->next;
+    semList->next = node;
+
+    semListLock->Release();
+
+    // return the id back to the exception handler
+    return node->id;
+}
+
+/*
+ * A helper to find the the semaphore via the id
+ */
+
+Semaphore *FindSemaphore(int id){
+    semEntry_t *cur = semList->next;
+    while (cur != nullptr) {
+        if (cur->id == id)
+            return cur->sem;
+        cur = cur->next;
+    }
+    return nullptr;
+}
+
+
+
+/*
+ * a handler to wait on the semaphore
+ */
+
+int do_SemWait(int sem_id){
+    semListLock->Acquire();
+    Semaphore *s = FindSemaphore(sem_id);
+    semListLock->Release();
+
+    if (s == nullptr)
+        return -1;
+
+    s->P();
+    return 0;
+}
+
+
+
+/*
+ * a handler to post on the semaphore
+ */
+
+int do_SemPost(int sem_id){
+    semListLock->Acquire();
+    Semaphore *s = FindSemaphore(sem_id);
+    semListLock->Release();
+
+    if (s == nullptr)
+        return -1;
+
+    s->V();
+    return 0;
+}
+
+
+/*
+ * Destroyer for the entry requested
+ */
+
+int do_SemDestroy(int sem_id){
+    semListLock->Acquire();
+
+    semEntry_t *prev = semList;
+    semEntry_t *cur = semList->next;
+
+    while (cur != nullptr) {
+        if (cur->id == sem_id) {
+            prev->next = cur->next;
+            delete cur->sem;
+            delete cur;
+            semListLock->Release();
+            return 0;
+        }
+        prev = cur;
+        cur = cur->next;
+    }
+
+    semListLock->Release();
+    return -1;
+}
+

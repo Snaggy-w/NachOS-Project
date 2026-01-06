@@ -37,6 +37,10 @@
 #define SC_feof 17
 #define SC_UserThreadCreate 18
 #define SC_UserThreadExit 19
+#define SC_SemInit 20
+#define SC_SemWait 21
+#define SC_SemPost 22
+#define SC_SemDestroy 23
 
 #ifdef IN_USER_MODE
 
@@ -138,6 +142,10 @@ int GetInt();
 int feof();
 int UserThreadCreate(void f(void *arg), void *arg);
 void UserThreadExit();
+int SemInit(int userSemAddr ,int semVal);
+int SemWait(int sem_id);
+int SemPost(int sem_id);
+int SemDestroy(int sem_id);
 #endif // IN_USER_MODE
 
 #endif /* SYSCALL_H */
