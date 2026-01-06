@@ -78,6 +78,7 @@ class Thread {
     int *stackTop;                      // the current stack pointer
     int machineState[MachineStateSize]; // all registers except for stackTop
 
+
   public:
     Thread(const char *debugName); // initialize a Thread
     ~Thread();                     // deallocate a Thread
@@ -86,6 +87,7 @@ class Thread {
     // is called
 
     // basic thread operations
+    int userStackSegmentId;
 
     void Fork(VoidFunctionPtr func, int arg); // Make thread run (*func)(arg)
     void Yield();                             // Relinquish the CPU if any

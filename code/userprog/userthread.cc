@@ -13,9 +13,6 @@
 int UthreadID = 0; // A global variable to keep track of user threads created
 		   // Might be later good for debugging especially if we use the -d t flag
 
-int stackOffset = 0; // Each thread will have a stack on top of the previous stack,
-		     // so we keep track of these placements with this variable
-
 int userThreadCount = 0; // A counter for threads that are active
 Semaphore *userThreadSem = new Semaphore("user thread semaphore",0); // Semaphore to hold the main thread
 Semaphore *userThreadLock = new Semaphore("user thread lock",1); // A lock made by a semaphore
@@ -50,17 +47,11 @@ void StartUserThread(int f){
     machine->Run();
 }
 
-
-
 int do_UserThreadCreate(int f, int arg) {
-    // Thread creation could fail due to insufficient memory
-
-    int newThreadStackSize = PageSize * 2; // For now give each thread two pages as a stack 
-
-    int usedStack = (stackOffset + 1) * newThreadStackSize; // to check if we have space left
-    if(usedStack > UserStackSize)
-	return -1; // not enough stack space to divide, returns failure
-
+    int stackSegmentId = currentThread->space->userStackSegmentMap->Find();
+    if (stackSegmentId < 0) { // out of memory
+        return -1;
+    }
     // increment the thread counter
     userThreadLock->P();
     int tid = UthreadID++;
@@ -87,14 +78,18 @@ int do_UserThreadCreate(int f, int arg) {
     // Then we offset the size of the stack of the new thread (essentially allocating a stack region)
     // The stack of that thread will now grow downwards towards the previous stack (either another thread or main thread)
     // I should probably create a diagram for that...
-    utb->stack = currentThread->space->GetNumPages() * PageSize - (stackOffset + 1) * newThreadStackSize;
+    /*
+    int stackSegmentId = newThread->space->userStackSegmentMap->Find();
+    if (stackSegmentId < 0) { // out of memory
+        return -1;
+    }*/
+    newThread->userStackSegmentId = stackSegmentId;
+    utb->stack = currentThread->space->GetNumPages() * PageSize - stackSegmentId * UserStackSegment;
 
-    // Increment the offset for other threads
-    stackOffset++;
 
     newThread->Fork((VoidFunctionPtr)StartUserThread, (int)utb);
 
-    return 0; // return success
+    return newThread->userStackSegmentId; // return success
 }
 
 
@@ -108,6 +103,7 @@ void do_UserThreadExit() {
 	if(userThreadCount == 0)
 		userThreadSem->V();
 	userThreadLock->V();
+    currentThread->space->userStackSegmentMap->Clear(currentThread->userStackSegmentId);
 	currentThread->Finish();
 }
 

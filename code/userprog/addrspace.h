@@ -16,11 +16,16 @@
 #include "copyright.h"
 #include "filesys.h"
 #include "translate.h"
+#include "bitmap.h"
 
-#define UserStackSize 1024 // increase this as necessary!
+#define UserStackSize 4096 // increase this as necessary!
+#define UserStackSegment PageSize * 2 // the size of the chunk used as a user thread's stack
 
 class AddrSpace {
   public:
+
+    BitMap * userStackSegmentMap;
+
     AddrSpace(OpenFile *executable); // Create an address space,
     // initializing it with the program
     // stored in the file "executable"
@@ -32,6 +37,7 @@ class AddrSpace {
     void SaveState();    // Save/restore address space-specific
     void RestoreState(); // info on a context switch
     unsigned int GetNumPages(); // A getter of numPages 
+  
   private:
     TranslationEntry *pageTable; // Assume linear page table translation
     // for now!
