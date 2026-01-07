@@ -182,6 +182,11 @@ void ExceptionHandler(ExceptionType which) {
 			do_UserThreadExit();
 			break;
 		}
+		case SC_UserThreadJoin: {
+			int tid = (int)machine->ReadRegister(4);
+			do_UserThreadJoin(tid);
+			break;			
+		}
 		case SC_SemInit: {
 			int userSemAddr = (int)machine->ReadRegister(4);
 			int SemVal = (int)machine->ReadRegister(5);

@@ -41,7 +41,7 @@
 #define SC_SemWait 21
 #define SC_SemPost 22
 #define SC_SemDestroy 23
-
+#define SC_UserThreadJoin 24
 #ifdef IN_USER_MODE
 
 // LB: This part is read only on compiling the test/*.c files.
@@ -142,6 +142,7 @@ int GetInt();
 int feof();
 int UserThreadCreate(void f(void *arg), void *arg);
 void UserThreadExit();
+void UserThreadJoin(int tid);
 int SemInit(int userSemAddr ,int semVal);
 int SemWait(int sem_id);
 int SemPost(int sem_id);

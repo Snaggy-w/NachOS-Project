@@ -3,6 +3,7 @@
 #include "system.h"
 #include "machine.h"
 #include "synch.h"
+#include "list.h"
 
 // UserStackSize: Default 1024 bytes in addrspace.h
 // It is the stack being devided by the threads created (not the stack size acquired by newly created threads)
@@ -16,6 +17,53 @@ int UthreadID = 0; // A global variable to keep track of user threads created
 int userThreadCount = 0; // A counter for threads that are active
 Semaphore *userThreadSem = new Semaphore("user thread semaphore",0); // Semaphore to hold the main thread
 Semaphore *userThreadLock = new Semaphore("user thread lock",1); // A lock made by a semaphore
+
+
+// List object to hold threadCondBundle related to each thread
+
+List *ListThreadJoinLock = new List;
+Lock *ThreadJoinLock = new Lock("protector for list"); // A lock to protect access to the list in case it is being updated by multiple threads
+
+// A replacement for the POSIX ABI in which we wait all using NULL, here we use -1 since NULL is a pointer
+
+#define USERTHREAD_JOIN_ALL (-1)
+/*
+ *
+ * FindJoinTCB: Helper function that returns a bundle based on the ID
+ *
+ */
+threadLockBundle_t *FindJoinTCB(int id) {
+    List *tmp = new List;
+    threadLockBundle_t *found = nullptr;
+    ThreadJoinLock->Acquire();{
+	    // pop out one element at a time, test it -> assign it if found to 'found'
+	    while (!ListThreadJoinLock->IsEmpty()) {
+		threadLockBundle_t *tcb =
+		    (threadLockBundle_t *)ListThreadJoinLock->Remove();
+
+		if (tcb->id == id && found == nullptr) {
+		    found = tcb;
+		}
+
+		tmp->Append(tcb);
+	    }
+
+	    // restore the list from tmp back to the original one
+	    while (!tmp->IsEmpty()) {
+		ListThreadJoinLock->Append(tmp->Remove());
+	    }
+    } ThreadJoinLock->Release();
+    
+
+    delete tmp;
+    return found;
+}
+
+
+
+
+
+// Main required functions
 
 void StartUserThread(int f){
     // cast f to the bundle structure 
@@ -54,7 +102,7 @@ int do_UserThreadCreate(int f, int arg) {
     }
     // increment the thread counter
     userThreadLock->P();
-    int tid = UthreadID++;
+    int tid = ++UthreadID; // UThreadID starts from 0, so we increment then assign
     userThreadCount++;
     userThreadLock->V();
 
@@ -84,37 +132,66 @@ int do_UserThreadCreate(int f, int arg) {
         return -1;
     }*/
     newThread->userStackSegmentId = stackSegmentId;
+    newThread->tid = tid; // Save the tid in the thread class instance
     utb->stack = currentThread->space->GetNumPages() * PageSize - stackSegmentId * UserStackSegment;
 
+    // create a struct that can be used to hold a thread until it is joined
+    threadLockBundle_t *tcb = new threadLockBundle_t {
+    	.id = tid,
+	.join_lock = new Lock("thread join lock")
+    };
+    ListThreadJoinLock->Append((void *)tcb); // add the structure to the list object
+    tcb->join_lock->Acquire(); // acquire the lock so we can lock the thread that tries to join this thread with its ID
 
     newThread->Fork((VoidFunctionPtr)StartUserThread, (int)utb);
 
-    return newThread->userStackSegmentId; // return success
+    return tid; // return success
 }
 
+/*
+ *
+ * UserThreadJoin: Hold the calling function until the thread with the specified ID returns or waits for any thread to finish
+ * 	if the id is set to USERTHREAD_JOIN_ALL (or -1)
+ *
+ */
+void do_UserThreadJoin(int id){
+	if(id == USERTHREAD_JOIN_ALL)
+		userThreadSem->P();
+	else {
+		threadLockBundle_t *tcb = FindJoinTCB(id);
+    		if (tcb == nullptr)
+        		return; // if something wrong happens 
+
+    		tcb->join_lock->Acquire();
+	}
+}
 
 /*
  * UserThreadExit: An exit call for a single thread that also tried to release the main thread via a semaphore
  */
 
 void do_UserThreadExit() {
+	// get thread lock bundle and unlock the mutex lock to allow the join
+	threadLockBundle_t *tcb = FindJoinTCB(currentThread->tid);
+	tcb->join_lock->Release();
+
 	userThreadLock->P();
 	userThreadCount--;
 	if(userThreadCount == 0)
-		userThreadSem->V();
+		userThreadSem->V(); // increment the semaphore to make the waiting thread on join(-1) (wait all) continue
 	userThreadLock->V();
-    currentThread->space->userStackSegmentMap->Clear(currentThread->userStackSegmentId);
+        currentThread->space->userStackSegmentMap->Clear(currentThread->userStackSegmentId);
 	currentThread->Finish();
 }
 
 void do_Halt(){
-	userThreadLock->P();
+	/*userThreadLock->P();
 	if(userThreadCount > 0){
 		userThreadLock->V();
 		userThreadSem->P(); // wait until the last thread releases that semaphore
 	} else {
 		userThreadLock->V(); 
-	}
+	}*/
 
 	interrupt->Halt();
 }

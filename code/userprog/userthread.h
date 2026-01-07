@@ -18,9 +18,15 @@ typedef struct UserThreadBundle {
 	int stack;
 } UserThreadBundle_t;
 
+typedef struct threadLockBundle {
+	int id;
+	Lock *join_lock;
+} threadLockBundle_t;
+
 extern void StartUserThread(int f);
 extern int do_UserThreadCreate(int f, int arg);
 extern void do_UserThreadExit();
+extern void do_UserThreadJoin(int id);
 extern void do_Halt();
 
 

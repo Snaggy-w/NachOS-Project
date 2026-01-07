@@ -88,7 +88,7 @@ class Thread {
 
     // basic thread operations
     int userStackSegmentId;
-
+    int tid;
     void Fork(VoidFunctionPtr func, int arg); // Make thread run (*func)(arg)
     void Yield();                             // Relinquish the CPU if any
     // other thread is runnable
