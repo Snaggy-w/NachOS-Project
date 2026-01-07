@@ -74,7 +74,7 @@ void StartUserThread(int f){
     currentThread->space->RestoreState();
 
     // set the program counter to the function to execute
-    machine->WriteRegister(PCReg, utb->f);
+    machine->WriteRegister(PCReg, utb->entry);
     /* MIPS uses a pipeline as a form of optimization (delay slot execution model)
     *  it tries to execute the next instruction (or at least decode it) while executing the one @ PC
     *  But it doesn't point to the next instruction automatically with PC, so when we change PC, it will still
@@ -83,10 +83,13 @@ void StartUserThread(int f){
     * We add 4 since MIPS is a 4 byte based instruction set (each instruction is over 4 bytes)
     * ref: https://www.cs.umb.edu/cs641/notes26.html
     */
-    machine->WriteRegister(NextPCReg, utb->f + 4);
+    machine->WriteRegister(NextPCReg, utb->entry + 4);
     
-    // set the argument to the register $a1
-    machine->WriteRegister(4, utb->arg);
+    // set the argument to the register $a1 which is now the function to execute in userspace
+    machine->WriteRegister(4, utb->f);
+
+    // set the actual argument of the function to that is being executed in user space
+    machine->WriteRegister(5, utb->arg);
 
     // set the stack pointer to the stack of the new thread
     machine->WriteRegister(StackReg, utb->stack);
@@ -95,7 +98,7 @@ void StartUserThread(int f){
     machine->Run();
 }
 
-int do_UserThreadCreate(int f, int arg) {
+int do_UserThreadCreate(int entry,int f, int arg) {
     int stackSegmentId = currentThread->space->userStackSegmentMap->Find();
     if (stackSegmentId < 0) { // out of memory
         return -1;
@@ -120,6 +123,7 @@ int do_UserThreadCreate(int f, int arg) {
 
     // Stage the bundled structure
     UserThreadBundle *utb = new UserThreadBundle; // apparently that's how we initialize structs in C++
+    utb->entry = entry;
     utb->f = f;
     utb->arg = arg;
     // We get the the address where the address space currently is stretched to
@@ -180,6 +184,15 @@ void do_UserThreadExit() {
 	if(userThreadCount == 0)
 		userThreadSem->V(); // increment the semaphore to make the waiting thread on join(-1) (wait all) continue
 	userThreadLock->V();
+	
+	/* cleanup of the objects: tcb and the lock inside to avoid memory leaks*/
+	/*ThreadJoinLock->Acquire();
+	ListThreadJoinLock->Remove(tcb);
+	ThreadJoinLock->Release();
+
+	delete tcb->join_lock;
+	delete tcb;*/
+
         currentThread->space->userStackSegmentMap->Clear(currentThread->userStackSegmentId);
 	currentThread->Finish();
 }

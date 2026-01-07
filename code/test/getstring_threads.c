@@ -1,5 +1,5 @@
 #include "syscall.h"
-
+#include "libthread.h"
 void reader(void *arg) {
     char buf[32];
 

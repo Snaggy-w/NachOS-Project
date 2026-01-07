@@ -9,7 +9,7 @@ void worker(void *arg) {
     PutString("Thread ");
     PutInt(id);
     PutString(" exiting\n");
-    UserThreadExit();
+    //UserThreadExit();
 }
 
 int main() {

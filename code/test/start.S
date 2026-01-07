@@ -193,7 +193,8 @@ feof: // kernel based state getter, return whether a real EOF is detected regard
 	syscall
 	j	$31
 	.end feof
-
+/*
+	 The function entry is now in the libthread library
 	.globl  UserThreadCreate
 	.ent	UserThreadCreate
 UserThreadCreate: 
@@ -201,7 +202,7 @@ UserThreadCreate:
 	syscall
 	j	$31
 	.end UserThreadCreate
-
+*/
 	.globl  UserThreadJoin
 	.ent	UserThreadJoin
 UserThreadJoin: 

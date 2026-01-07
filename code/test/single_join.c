@@ -1,4 +1,3 @@
-// test/join_single.c
 #include "syscall.h"
 #include "libthread.h"
 

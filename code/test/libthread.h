@@ -18,6 +18,9 @@ typedef struct {
 }cond_t;
 
 
+//extern void UserThreadRoot(void (*f)(void *), void *arg); 
+extern int UserThreadCreate(void (*f)(void *), void *arg);
+
 extern int sem_init(sem_t * sem, int val);
 extern int sem_wait(sem_t * sem);
 extern int sem_post(sem_t * sem);

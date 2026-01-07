@@ -1,5 +1,5 @@
 #include "syscall.h"
-
+#include "libthread.h"
 void simpleThread(void *arg) {
     PutString("Thread started\n");
     UserThreadExit();

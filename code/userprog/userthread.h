@@ -13,6 +13,7 @@
  *		- stack: stack pointer
  */
 typedef struct UserThreadBundle {
+	int entry;
 	int f;
 	int arg;
 	int stack;
@@ -24,7 +25,7 @@ typedef struct threadLockBundle {
 } threadLockBundle_t;
 
 extern void StartUserThread(int f);
-extern int do_UserThreadCreate(int f, int arg);
+extern int do_UserThreadCreate(int entry,int f, int arg);
 extern void do_UserThreadExit();
 extern void do_UserThreadJoin(int id);
 extern void do_Halt();

@@ -82,3 +82,31 @@ void cond_broadcast(cond_t * c){
 		}
 	} mutex_unlock(&c->x);
 }
+
+
+// Implementation of a safer UserThreadCreate function that is built with inline assembly
+// It is required here as we are passing a reference to UserThreadRoot to the syscall
+
+void UserThreadRoot(void (*f)(void *), void *arg) {
+    f(arg);             // run user function
+    UserThreadExit();   // syscall -> automatic cleanup
+}
+
+int UserThreadCreate(void (*f)(void *), void *arg) {
+    int ret;
+    asm volatile(
+        "move $4, %1\n"   // entry = UserThreadRoot
+        "move $5, %2\n"   // f
+        "move $6, %3\n"   // arg
+        "li   $2, %4\n"
+        "syscall\n"
+        "move %0, $2\n"
+        : "=r"(ret)
+        : "r"(UserThreadRoot),
+          "r"(f),
+          "r"(arg),
+          "i"(SC_UserThreadCreate)
+        : "$2", "$4", "$5", "$6"
+    );
+    return ret;
+}

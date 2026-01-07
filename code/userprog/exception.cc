@@ -171,9 +171,10 @@ void ExceptionHandler(ExceptionType which) {
 	  		break;		
 		}
 		case SC_UserThreadCreate: {
-			int f = (int)machine->ReadRegister(4);
-			int arg = (int)machine->ReadRegister(5);
-			int res = do_UserThreadCreate(f,arg);
+			int entry = (int)machine->ReadRegister(4); // The UserThreadRoot function reference
+			int f = (int)machine->ReadRegister(5);
+			int arg = (int)machine->ReadRegister(6);
+			int res = do_UserThreadCreate(entry,f,arg);
 			// return the result back to the user
 			machine->WriteRegister(2,res);
 			break;

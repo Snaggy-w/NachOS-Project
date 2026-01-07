@@ -140,7 +140,9 @@ char * GetString(char *s, int n);
 void PutInt(int n);
 int GetInt();
 int feof();
-int UserThreadCreate(void f(void *arg), void *arg);
+// The function is now purely implemented in the libthread library for compatability
+//int UserThreadCreate(void f(void *arg), void *arg);
+
 void UserThreadExit();
 void UserThreadJoin(int tid);
 int SemInit(int userSemAddr ,int semVal);
