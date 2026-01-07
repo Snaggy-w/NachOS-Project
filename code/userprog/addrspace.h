@@ -19,7 +19,7 @@
 #include "bitmap.h"
 
 #define UserStackSize 4096 // increase this as necessary!
-#define UserStackSegment PageSize * 2 // the size of the chunk used as a user thread's stack
+#define UserStackSegment (PageSize * 2) // the size of the chunk used as a user thread's stack
 
 class AddrSpace {
   public:

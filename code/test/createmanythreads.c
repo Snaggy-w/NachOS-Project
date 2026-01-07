@@ -5,7 +5,7 @@ void dumbFunc(void* arg) {
     //int *i = (int *)arg;
     // PutString("Thread is running...");
     // PutInt(*i);
-    PutChar('\n');
+    PutChar(' ');
     UserThreadExit();
 }
 
