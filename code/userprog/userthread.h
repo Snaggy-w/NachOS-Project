@@ -22,6 +22,7 @@ typedef struct UserThreadBundle {
 typedef struct threadLockBundle {
 	int id;
 	Lock *join_lock;
+	Semaphore *acquire_sem;
 } threadLockBundle_t;
 
 extern void StartUserThread(int f);

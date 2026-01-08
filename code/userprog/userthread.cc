@@ -141,11 +141,13 @@ int do_UserThreadCreate(int entry,int f, int arg) {
 
     // create a struct that can be used to hold a thread until it is joined
     threadLockBundle_t *tcb = new threadLockBundle_t {
-    	.id = tid,
-	.join_lock = new Lock("thread join lock")
+        .id = tid, 
+        .join_lock = new Lock("thread join lock"), 
+        .acquire_sem = new Semaphore("acquire lock semaphore", 0)
     };
     ListThreadJoinLock->Append((void *)tcb); // add the structure to the list object
     tcb->join_lock->Acquire(); // acquire the lock so we can lock the thread that tries to join this thread with its ID
+    tcb->acquire_sem->V();
 
     newThread->Fork((VoidFunctionPtr)StartUserThread, (int)utb);
 
@@ -165,7 +167,7 @@ void do_UserThreadJoin(int id){
 		threadLockBundle_t *tcb = FindJoinTCB(id);
     		if (tcb == nullptr)
         		return; // if something wrong happens 
-
+            tcb->acquire_sem->P();
     		tcb->join_lock->Acquire();
 	}
 }
@@ -193,7 +195,7 @@ void do_UserThreadExit() {
 	delete tcb->join_lock;
 	delete tcb;*/
 
-        currentThread->space->userStackSegmentMap->Clear(currentThread->userStackSegmentId);
+    currentThread->space->userStackSegmentMap->Clear(currentThread->userStackSegmentId);
 	currentThread->Finish();
 }
 
