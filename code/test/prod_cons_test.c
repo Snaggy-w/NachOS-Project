@@ -65,6 +65,7 @@ int main() {
     UserThreadCreate(producer, 0);
     UserThreadCreate(consumer, 0);
 
+    UserThreadJoin(-1);
     Halt(); // kernel stops after threads finish
     return 0;
 }
