@@ -12,6 +12,10 @@ void dumbFunc(void* arg) {
 int main() {
     for (int i = 0; i < 100; i++) {
         int id = UserThreadCreate(dumbFunc, &i);
+        if(id == -1){
+            PutString("Not enough memory to allocate user thread stack\n");
+            Halt();
+        }
         PutInt(id);
         PutChar('\n');
     }

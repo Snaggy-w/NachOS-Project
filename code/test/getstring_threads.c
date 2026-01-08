@@ -16,8 +16,11 @@ void reader(void *arg) {
 int main() {
     PutString("Main: create readers\n");
 
-    UserThreadCreate(reader, 0);
-    UserThreadCreate(reader, 0);
+    int i = UserThreadCreate(reader, 0);
+    int j = UserThreadCreate(reader, 0);
+
+    UserThreadJoin(i);
+    UserThreadJoin(j);
 
     Halt();
     return 0;
