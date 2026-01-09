@@ -89,23 +89,75 @@ void Semaphore::V() {
     (void)interrupt->SetLevel(oldLevel);
 }
 
-// Dummy functions -- so we can compile our later assignments
-// Note -- without a correct implementation of Condition::Wait(),
-// the test case in the network assignment won't work!
-Lock::Lock(const char *debugName) {}
+// Implementation inspired from this paper:
+//	- https://birrell.org/andrew/papers/ImplementingCVs.pdf
+Lock::Lock(const char *debugName) {
+	SemLock = new Semaphore(debugName,1); // initial value set to 1 to make a semaphore act like a lock
+}
 
-Lock::~Lock() {}
+Lock::~Lock() {
+	delete SemLock;
+}
 
-void Lock::Acquire() {}
+void Lock::Acquire() {
+	SemLock->P();
+}
 
-void Lock::Release() {}
+void Lock::Release() {
+	SemLock->V();
+}
 
-Condition::Condition(const char *debugName) {}
+/*
+ *  pthreads implementation also relies on semaphores, see:
+ *  	- https://github.com/BrianGladman/pthreads/blob/master/implement.h -> pthread_cond_t_
+ *	- https://github.com/BrianGladman/pthreads/blob/master/pthread_cond_wait.c
+ *
+ *  The implementation is too bloated for our purposes (although probably safer), so we will rely on the simpler
+ *  implementation of the paper mentioned above linked again below:
+ *	- https://birrell.org/andrew/papers/ImplementingCVs.pdf
+ */
+Condition::Condition(const char *debugName) {
+	this->name = debugName; // probably not the right usage of "name" but it's for debugging
+	x = new Lock(name); // Locks and semaphores bare the same name as the condition
+	s = new Semaphore(name,0);
+	h = new Semaphore(name,0);
+	waiters = 0;
+}
 
-Condition::~Condition() {}
+Condition::~Condition() {
+	delete x;
+	delete s;
+	delete h;
+}
 
-void Condition::Wait(Lock *conditionLock) { ASSERT(FALSE); }
+void Condition::Wait(Lock *conditionLock) { 
+	//ASSERT(FALSE);
+	x->Acquire(); { // This scope block thing is sick!
+		waiters++;
+	} x->Release();
+	conditionLock->Release();
+	s->P();
+	h->V();
+	conditionLock->Acquire();
+}
 
-void Condition::Signal(Lock *conditionLock) {}
+void Condition::Signal(Lock *conditionLock) {
+	x->Acquire(); {
+		if(waiters > 0) {
+			waiters--;
+			s->V();
+			h->P();
+		}
+	} x->Release();
+}
 
-void Condition::Broadcast(Lock *conditionLock) {}
+void Condition::Broadcast(Lock *conditionLock) {
+	x->Acquire(); {
+		for(int i = 0; i < waiters; i++) // unblock all waiters
+			s->V();
+		while(waiters > 0){ // reset the waiters counter
+			waiters--;
+			h->P();
+		}
+	} x->Release();
+}

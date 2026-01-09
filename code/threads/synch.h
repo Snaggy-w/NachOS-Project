@@ -79,7 +79,7 @@ class Lock {
 
   private:
     const char *name; // for debugging
-    // plus some other stuff you'll need to define
+    Semaphore *SemLock;
 };
 
 // The following class defines a "condition variable".  A condition
@@ -114,6 +114,10 @@ class Lock {
 // can acquire the lock, and change data structures, before the woken
 // thread gets a chance to run.
 
+
+// Implementation based on:
+//	- https://birrell.org/andrew/papers/ImplementingCVs.pdf
+
 class Condition {
   public:
     Condition(const char *debugName); // initialize condition to
@@ -131,6 +135,12 @@ class Condition {
 
   private:
     const char *name;
-    // plus some other stuff you'll need to define
+    int waiters;
+    Lock *x; // In the original implementation x is a semaphore with value 1, which is a tad faster
+	    // but we will do it as a lock for clarity (more abstractions but hey performance isn't our
+	    // top priority here)
+    Semaphore *s,*h; // s is the semaphore responsible for holding the threads depending on the calls to wait
+		     // h represents a handshake semaphore to make the signaller block until a released thread
+		     // releases the caller (to fix a concurrency bug)
 };
 #endif // SYNCH_H

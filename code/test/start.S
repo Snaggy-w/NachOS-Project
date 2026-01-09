@@ -193,15 +193,64 @@ feof: // kernel based state getter, return whether a real EOF is detected regard
 	syscall
 	j	$31
 	.end feof
-
+/*
+	 The function entry is now in the libthread library
 	.globl  UserThreadCreate
 	.ent	UserThreadCreate
-UserThreadCreate: // kernel based state getter, return whether a real EOF is detected regardless of encoding (hopefully)
+UserThreadCreate: 
 	addiu $2, $0, SC_UserThreadCreate
 	syscall
 	j	$31
 	.end UserThreadCreate
+*/
+	.globl  UserThreadJoin
+	.ent	UserThreadJoin
+UserThreadJoin: 
+	addiu $2, $0, SC_UserThreadJoin
+	syscall
+	j	$31
+	.end UserThreadJoin
+	
 
+	.globl  UserThreadExit
+	.ent	UserThreadExit
+UserThreadExit: 
+	addiu $2, $0, SC_UserThreadExit
+	syscall
+	j	$31
+	.end UserThreadExit
+	
+	.globl  SemInit
+	.ent	SemInit
+SemInit:
+	addiu $2, $0, SC_SemInit
+	syscall
+	j	$31
+	.end 	SemInit
+
+	.globl  SemWait
+	.ent	SemWait
+SemWait:
+	addiu $2, $0, SC_SemWait
+	syscall
+	j	$31
+	.end 	SemWait
+
+	.globl  SemPost
+	.ent	SemPost
+SemPost:
+	addiu $2, $0, SC_SemPost
+	syscall
+	j	$31
+	.end 	SemPost
+
+	.globl  SemDestroy
+	.ent	SemDestroy
+SemDestroy:
+	addiu $2, $0, SC_SemDestroy
+	syscall
+	j	$31
+	.end 	SemDestroy
 
 /* dummy function to keep gcc happy */
         .globl  __main

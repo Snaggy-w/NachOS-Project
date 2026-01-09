@@ -36,7 +36,12 @@
 #define SC_GetInt 16
 #define SC_feof 17
 #define SC_UserThreadCreate 18
-
+#define SC_UserThreadExit 19
+#define SC_SemInit 20
+#define SC_SemWait 21
+#define SC_SemPost 22
+#define SC_SemDestroy 23
+#define SC_UserThreadJoin 24
 #ifdef IN_USER_MODE
 
 // LB: This part is read only on compiling the test/*.c files.
@@ -135,7 +140,15 @@ char * GetString(char *s, int n);
 void PutInt(int n);
 int GetInt();
 int feof();
-int UserThreadCreate(void f(void *arg), void *arg);
+// The function is now purely implemented in the libthread library for compatability
+//int UserThreadCreate(void f(void *arg), void *arg);
+
+void UserThreadExit();
+void UserThreadJoin(int tid);
+int SemInit(int userSemAddr ,int semVal);
+int SemWait(int sem_id);
+int SemPost(int sem_id);
+int SemDestroy(int sem_id);
 #endif // IN_USER_MODE
 
 #endif /* SYSCALL_H */

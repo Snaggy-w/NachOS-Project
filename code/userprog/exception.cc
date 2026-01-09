@@ -24,6 +24,7 @@
 #include "copyright.h"
 #include "syscall.h"
 #include "system.h"
+#include "userthread.h"
 
 //----------------------------------------------------------------------
 // UpdatePC : Increments the Program Counter register in order to resume
@@ -85,7 +86,8 @@ void ExceptionHandler(ExceptionType which) {
 		
 		case SC_Halt:
 			DEBUG('a', "Shutdown, initiated by user program.\n");
-			interrupt->Halt();
+			//interrupt->Halt();
+			do_Halt(); // Account for multi-threaded implementation
 		break;
 
 		case SC_Exit:
@@ -168,10 +170,47 @@ void ExceptionHandler(ExceptionType which) {
 			machine->WriteRegister(2,synchconsole->feof());
 	  		break;		
 		}
-		// case SC_UserThreadCreate: {
-		// 	int n = (int)machine->ReadRegister(4);
-		// 	break;
-		// }
+		case SC_UserThreadCreate: {
+			int entry = (int)machine->ReadRegister(4); // The UserThreadRoot function reference
+			int f = (int)machine->ReadRegister(5);
+			int arg = (int)machine->ReadRegister(6);
+			int res = do_UserThreadCreate(entry,f,arg);
+			// return the result back to the user
+			machine->WriteRegister(2,res);
+			break;
+		}
+		case SC_UserThreadExit: {
+			do_UserThreadExit();
+			break;
+		}
+		case SC_UserThreadJoin: {
+			int tid = (int)machine->ReadRegister(4);
+			do_UserThreadJoin(tid);
+			break;			
+		}
+		case SC_SemInit: {
+			int userSemAddr = (int)machine->ReadRegister(4);
+			int SemVal = (int)machine->ReadRegister(5);
+			int sem_val = do_SemInit(SemVal);
+			machine->WriteMem(userSemAddr, sizeof(int), sem_val);
+			break;
+		}
+		case SC_SemWait: {
+			int sem_id = (int)machine->ReadRegister(4);
+			do_SemWait(sem_id);
+			break;
+		}
+		case SC_SemPost: {
+			int sem_id = (int)machine->ReadRegister(4);
+			do_SemPost(sem_id);
+			break;
+		}
+		case SC_SemDestroy: {
+			int sem_id = (int)machine->ReadRegister(4);
+			do_SemDestroy(sem_id);
+			break;
+
+		}
 		default: {
 			printf("Unexpected user mode exception %d %d\n", which, type);
 			ASSERT(FALSE);

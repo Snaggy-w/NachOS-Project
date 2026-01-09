@@ -88,3 +88,13 @@ void SynchList::Mapcar(VoidFunctionPtr func) {
     list->Mapcar(func);
     lock->Release();
 }
+
+
+//----------------------------------------------------------------------
+// SynchList::IsEmpty
+//      Returns TRUE if the list is empty (has no items).
+//----------------------------------------------------------------------
+
+bool SynchList::IsEmpty() {
+	return list->IsEmpty();
+}

@@ -111,6 +111,10 @@ AddrSpace::AddrSpace(OpenFile *executable) {
         executable->ReadAt(&(machine->mainMemory[noffH.initData.virtualAddr]),
                            noffH.initData.size, noffH.initData.inFileAddr);
     }
+
+    // initializing the bitmap for user stack segments (stored within this address space)
+    this->userStackSegmentMap = new BitMap((int)(UserStackSize / UserStackSegment));
+    this->userStackSegmentMap->Mark(0); // marking the segment for the "default" main thread
 }
 
 //----------------------------------------------------------------------
@@ -122,6 +126,7 @@ AddrSpace::~AddrSpace() {
     // LB: Missing [] for delete
     // delete pageTable;
     delete[] pageTable;
+    delete userStackSegmentMap; 
     // End of modification
 }
 
@@ -176,4 +181,8 @@ void AddrSpace::SaveState() {}
 void AddrSpace::RestoreState() {
     machine->pageTable = pageTable;
     machine->pageTableSize = numPages;
+}
+
+unsigned int AddrSpace::GetNumPages() {
+	return numPages;
 }
