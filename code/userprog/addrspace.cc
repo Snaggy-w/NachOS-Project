@@ -102,14 +102,20 @@ AddrSpace::AddrSpace(OpenFile *executable) {
     if (noffH.code.size > 0) {
         DEBUG('a', "Initializing code segment, at 0x%x, size %d\n",
               noffH.code.virtualAddr, noffH.code.size);
-        executable->ReadAt(&(machine->mainMemory[noffH.code.virtualAddr]),
-                           noffH.code.size, noffH.code.inFileAddr);
+        // executable->ReadAt(&(machine->mainMemory[noffH.code.virtualAddr]),
+        //                    noffH.code.size, noffH.code.inFileAddr);
+        this->ReadAtVirtual(executable, noffH.code.virtualAddr, noffH.code.size,
+            noffH.code.inFileAddr, pageTable, numPages);
     }
     if (noffH.initData.size > 0) {
         DEBUG('a', "Initializing data segment, at 0x%x, size %d\n",
               noffH.initData.virtualAddr, noffH.initData.size);
-        executable->ReadAt(&(machine->mainMemory[noffH.initData.virtualAddr]),
-                           noffH.initData.size, noffH.initData.inFileAddr);
+
+
+        this->ReadAtVirtual(executable, noffH.initData.virtualAddr, noffH.initData.size,
+            noffH.initData.inFileAddr, pageTable, numPages);
+        // executable->ReadAt(&(machine->mainMemory[noffH.initData.virtualAddr]),
+        //                    noffH.initData.size, noffH.initData.inFileAddr);
     }
 
     // initializing the bitmap for user stack segments (stored within this address space)
@@ -185,4 +191,24 @@ void AddrSpace::RestoreState() {
 
 unsigned int AddrSpace::GetNumPages() {
 	return numPages;
+}
+
+// !!!for now, we assume that only one process can be run on our machine
+/// TODO: multiprocess system will have a different implementation
+// requiring atomicity of the whole address space initialization in the context
+// of the whole system
+    void AddrSpace:: ReadAtVirtual(
+      OpenFile *executable, int virtualaddr, int numBytes, int position,
+      TranslationEntry *pageTable, unsigned numPages) {
+
+    char* tmpBuffer = new char[numBytes];
+    executable->ReadAt(tmpBuffer, numBytes, position);
+
+    machine->pageTable = pageTable;
+    machine->pageTableSize = numPages;
+
+    /// TODO: we could manipulate 4-byte words instead of byte by byte writing
+    for (int byteInd = 0; byteInd < numBytes; byteInd++) {
+        machine->WriteMem(virtualaddr + byteInd, 1, (int)tmpBuffer[byteInd]);
+    }
 }
