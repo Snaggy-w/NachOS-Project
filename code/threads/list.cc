@@ -216,3 +216,47 @@ void *List::SortedRemove(long long *keyPtr) {
     delete element;
     return thing;
 }
+
+
+void* List::SortedGet(long long key) {
+    ListElement* curr = first;
+    while (curr && curr->key < key) {
+        curr = curr->next;
+    }
+
+    if (!curr || curr->key > key) {
+        return nullptr;
+    }
+
+    return curr->item;
+}
+
+void *List::SortedRemoveByKey(long long key) {
+    void* thing = nullptr;
+    if (!first) {
+        return thing;
+    }
+
+    if (first->key == key) {
+        long long* keyPtr = nullptr;
+        thing = SortedRemove(keyPtr);
+    } else {
+        ListElement* prev = first;
+        while (prev && prev->next && prev->next->key < key) {
+            prev = prev->next;
+        }
+        if (!prev->next || prev->next->key != key) {
+            return thing;
+        } 
+        ListElement* victim = prev->next;
+        if (victim == last) {
+            last = prev;
+        }
+        prev->next = victim->next;
+        thing = victim->item;
+
+        delete victim;
+    }
+
+    return thing;
+}

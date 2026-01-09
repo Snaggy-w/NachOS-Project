@@ -20,7 +20,6 @@ Semaphore *userThreadLock = new Semaphore("user thread lock",1); // A lock made 
 
 
 // List object to hold threadCondBundle related to each thread
-
 List *ListThreadJoinLock = new List;
 Lock *ThreadJoinLock = new Lock("protector for list"); // A lock to protect access to the list in case it is being updated by multiple threads
 
@@ -32,36 +31,16 @@ Lock *ThreadJoinLock = new Lock("protector for list"); // A lock to protect acce
  * FindJoinTCB: Helper function that returns a bundle based on the ID
  *
  */
-threadLockBundle_t *FindJoinTCB(int id) {
-    List *tmp = new List;
-    threadLockBundle_t *found = nullptr;
-    ThreadJoinLock->Acquire();{
-	    // pop out one element at a time, test it -> assign it if found to 'found'
-	    while (!ListThreadJoinLock->IsEmpty()) {
-		threadLockBundle_t *tcb =
-		    (threadLockBundle_t *)ListThreadJoinLock->Remove();
+threadLockBundle_t *FindJoinTCB(int id)
+{
+    ThreadJoinLock->Acquire();
 
-		if (tcb->id == id && found == nullptr) {
-		    found = tcb;
-		}
+    threadLockBundle_t *found  = (threadLockBundle_t*)
+        ListThreadJoinLock->SortedGet(id);
 
-		tmp->Append(tcb);
-	    }
-
-	    // restore the list from tmp back to the original one
-	    while (!tmp->IsEmpty()) {
-		ListThreadJoinLock->Append(tmp->Remove());
-	    }
-    } ThreadJoinLock->Release();
-    
-
-    delete tmp;
+    ThreadJoinLock->Release();
     return found;
 }
-
-
-
-
 
 // Main required functions
 
@@ -141,11 +120,11 @@ int do_UserThreadCreate(int entry,int f, int arg) {
 
     // create a struct that can be used to hold a thread until it is joined
     threadLockBundle_t *tcb = new threadLockBundle_t {
-        .id = tid, 
-        .join_lock = new Lock("thread join lock"), 
-        .acquire_sem = new Semaphore("acquire lock semaphore", 0)
+    	.id = tid,
+	    .join_lock = new Lock("thread join lock")
     };
-    ListThreadJoinLock->Append((void *)tcb); // add the structure to the list object
+    // thread lock bundles sorted insertion based on the thread id
+    ListThreadJoinLock->SortedInsert((void *)tcb, tid); 
     tcb->join_lock->Acquire(); // acquire the lock so we can lock the thread that tries to join this thread with its ID
     tcb->acquire_sem->V();
 
@@ -169,6 +148,7 @@ void do_UserThreadJoin(int id){
         		return; // if something wrong happens 
             tcb->acquire_sem->P();
     		tcb->join_lock->Acquire();
+            ListThreadJoinLock->SortedRemoveByKey(id);
 	}
 }
 
@@ -195,6 +175,7 @@ void do_UserThreadExit() {
 	delete tcb->join_lock;
 	delete tcb;*/
 
+    currentThread->space->userStackSegmentMap->Clear(currentThread->userStackSegmentId);
     currentThread->space->userStackSegmentMap->Clear(currentThread->userStackSegmentId);
 	currentThread->Finish();
 }
