@@ -121,7 +121,8 @@ int do_UserThreadCreate(int entry,int f, int arg) {
     // create a struct that can be used to hold a thread until it is joined
     threadLockBundle_t *tcb = new threadLockBundle_t {
     	.id = tid,
-	    .join_lock = new Lock("thread join lock")
+	    .join_lock = new Lock("thread join lock"),
+        .acquire_sem = new Semaphore("acquire lock semaphore", 0)
     };
     // thread lock bundles sorted insertion based on the thread id
     ListThreadJoinLock->SortedInsert((void *)tcb, tid); 
