@@ -260,3 +260,115 @@ void *List::SortedRemoveByKey(long long key) {
 
     return thing;
 }
+
+
+void List::InsertAt(void *item, int index){
+
+	if(this->IsEmpty() || index <= 0){ // if list is empty or we give a negative index we prepend
+		this->Prepend(item);
+		return;
+	}
+	
+	// create an element entry, same is done in prepend that's why we create it here 	
+	ListElement *element = new ListElement(item,0);
+
+	// walk through the linked list until index - 1 or the end if index is larger (append)
+	ListElement *prev = first; 
+	int i = 0;
+	
+	while(prev->next != NULL && i < index - 1){
+		prev = prev->next;
+		i++;
+	}
+	
+	// insert the element in the list
+	element->next = prev->next;
+	prev->next = element;
+
+	if(element->next == NULL) // update the last entry if the element is inserted at the end
+		last = element; 
+}
+
+int List::Size() {
+	int n = 0;
+	for(ListElement *p = first; p != NULL; p = p->next) // walk through the list
+		n++;
+	return n;
+}
+
+void *List::GetAt(int index){
+	if(index < 0)
+		return NULL;
+
+	ListElement *p = first;
+	int i = 0;
+
+	while(p && i < index){
+		p = p->next;
+		i++;
+	}
+	// if we found the element we return the item, and if something is wrong we return NULL
+	return p ? p->item : NULL; 
+}
+
+
+// completely remove an element without returning it
+void List::DropAt(int index){ 
+	if(this->IsEmpty() || index < 0){ // if list is empty or we give a negative index we do nothing
+		return;
+	}
+	// walk through the linked list until index - 1 or the end if index is larger (append)
+	ListElement *prev = first; 
+	int i = 0;
+	
+	while(prev->next != NULL && i < index - 1){
+		prev = prev->next;
+		i++;
+	}
+	
+	if(prev->next == NULL) // end of list
+		return; // do nothing
+
+	
+	ListElement *target = prev->next;
+	if(target == last) // update the last entry pointer
+		last = prev;
+
+	prev->next = target->next;
+	delete target; // drop the list entry
+	
+}
+
+
+void *List::RemoveAt(int index){
+    if (IsEmpty() || index < 0) 
+        return NULL;
+
+    // remove first element
+    if (index == 0) {
+        return Remove();  // Remove() already deletes ListElement correctly and returns it so we reuse it
+    }
+
+    ListElement *prev = first;
+    int i = 0;
+
+    while (prev->next != NULL && i < index - 1) {
+        prev = prev->next;
+        i++;
+    }
+
+    // index out of range
+    if (prev->next == NULL)
+        return NULL;
+
+    ListElement *target = prev->next;
+    void *item = target->item;
+
+    prev->next = target->next;
+    if (target == last)
+        last = prev;
+
+    delete target;
+    return item;
+}
+

@@ -53,6 +53,13 @@ class List {
     // on the list
     bool IsEmpty(); // is the list empty?
 
+    // Methods to ease development
+
+    void InsertAt(void *item, int index);
+    int Size();
+    void *GetAt(int index);
+    void DropAt(int index);
+    void *RemoveAt(int index);
     // Routines to put/get items on/off list in order (sorted by key)
     void SortedInsert(void *item, long long sortKey); // Put item into list
     void *SortedRemove(long long *keyPtr); // Remove first item from list
