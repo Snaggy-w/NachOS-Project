@@ -85,7 +85,7 @@ AddrSpace::AddrSpace(OpenFile *executable) {
     pageTable = new TranslationEntry[numPages];
     for (i = 0; i < numPages; i++) {
         pageTable[i].virtualPage = i; // for now, virtual page # = phys page #
-        pageTable[i].physicalPage = i;
+        pageTable[i].physicalPage = i + 1;
         pageTable[i].valid = TRUE;
         pageTable[i].use = FALSE;
         pageTable[i].dirty = FALSE;
@@ -197,7 +197,7 @@ unsigned int AddrSpace::GetNumPages() {
 /// TODO: multiprocess system will have a different implementation
 // requiring atomicity of the whole address space initialization in the context
 // of the whole system
-    void AddrSpace:: ReadAtVirtual(
+void AddrSpace:: ReadAtVirtual(
       OpenFile *executable, int virtualaddr, int numBytes, int position,
       TranslationEntry *pageTable, unsigned numPages) {
 
