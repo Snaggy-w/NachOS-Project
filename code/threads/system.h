@@ -35,6 +35,7 @@ extern Timer *timer;                // the hardware alarm clock
 #ifdef USER_PROGRAM
 #include "machine.h"
 extern Machine *machine; // user program memory and registers
+extern FrameProvider *frameProvider;
 
 /* 
  * A global extern of class instances like the console should be done here and initialized in the header file "system.cc"

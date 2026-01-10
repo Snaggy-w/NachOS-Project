@@ -4,6 +4,7 @@ to free physical frames in case a process finishes execution.
 */
 
 #include "frameprovider.h"
+#include "system.h"
 
 //#define NumPhysPages 128
 //mainMemory + (N x PageSize)

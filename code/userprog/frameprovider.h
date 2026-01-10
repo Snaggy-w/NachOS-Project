@@ -2,7 +2,6 @@
 #define FRAMEPROVIDER_H
 
 #include "bitmap.h"
-#include "system.h"
 #include "machine.h"
 #include <stdlib.h> // for srand, rand
 #include <time.h> // for time

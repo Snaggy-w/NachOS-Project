@@ -6,6 +6,7 @@
 // of liability and disclaimer of warranty provisions.
 
 #include "system.h"
+#include "frameprovider.h"
 #include "copyright.h"
 
 // This defines *all* of the global data structures used by Nachos.
@@ -41,6 +42,8 @@ PostOffice *postOffice;
  * A declaration of the class instances should be defined here and initialized/destroyed below
  */
 SynchConsole *synchconsole;
+FrameProvider *frameProvider;
+
 #endif
 #endif
 
@@ -157,6 +160,7 @@ void Initialize(int argc, char **argv) {
      * Or maybe create a separate systemcall for files... To discuss
      */
     synchconsole = new SynchConsole(NULL,NULL);
+    frameProvider = new FrameProvider();
 #endif
 
 #ifdef FILESYS
@@ -185,6 +189,7 @@ void Cleanup() {
 #ifdef USER_PROGRAM
     delete machine;
     delete synchconsole;
+    delete frameProvider;
     delete STRING_BUFFER;
 #endif
 
