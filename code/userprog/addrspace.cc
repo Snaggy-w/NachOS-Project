@@ -19,7 +19,7 @@
 #include "copyright.h"
 #include "noff.h"
 #include "system.h"
-
+#include "frameprovider.h"
 #include <strings.h> /* for bzero */
 
 //----------------------------------------------------------------------

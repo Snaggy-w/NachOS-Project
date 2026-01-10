@@ -34,6 +34,7 @@ extern Timer *timer;                // the hardware alarm clock
 
 #ifdef USER_PROGRAM
 #include "machine.h"
+class FrameProvider;
 extern Machine *machine; // user program memory and registers
 extern FrameProvider *frameProvider;
 
