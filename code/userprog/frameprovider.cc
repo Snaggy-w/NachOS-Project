@@ -23,7 +23,7 @@ int FrameProvider::GetEmptyFrame(bool randomAllocation){
     int resultFrame;
     if(randomAllocation){
         while(true){
-            int i = rand % NumPhysPages;
+            int i = rand() % NumPhysPages;
             if(!mainMemMap->Test(i)){
                 mainMemMap->Mark(i);
                 resultFrame = i;
@@ -34,7 +34,7 @@ int FrameProvider::GetEmptyFrame(bool randomAllocation){
     else {
         resultFrame = mainMemMap->Find();
     }
-    bzero(machine->mainMemory[resultFrame * PageSize], PageSize);
+    bzero(machine->mainMemory + (resultFrame * PageSize), PageSize);
     return resultFrame;
 }
 
