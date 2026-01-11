@@ -42,6 +42,7 @@
 #define SC_SemPost 22
 #define SC_SemDestroy 23
 #define SC_UserThreadJoin 24
+#define SC_ForkExec 25
 #ifdef IN_USER_MODE
 
 // LB: This part is read only on compiling the test/*.c files.
@@ -149,6 +150,8 @@ int SemInit(int userSemAddr ,int semVal);
 int SemWait(int sem_id);
 int SemPost(int sem_id);
 int SemDestroy(int sem_id);
+
+int ForkExec(char * executable);
 #endif // IN_USER_MODE
 
 #endif /* SYSCALL_H */

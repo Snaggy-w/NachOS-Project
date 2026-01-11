@@ -25,7 +25,8 @@
 #include "syscall.h"
 #include "system.h"
 #include "userthread.h"
-
+#include "helpers.h"
+#include "userprocess.h"
 //----------------------------------------------------------------------
 // UpdatePC : Increments the Program Counter register in order to resume
 // the user program immediately after the "syscall" instruction.
@@ -90,10 +91,12 @@ void ExceptionHandler(ExceptionType which) {
 			do_Halt(); // Account for multi-threaded implementation
 		break;
 
-		case SC_Exit:
-			Exit(0); // maybe we should update the syscall to also include the exit code from a register?
-		break;
-
+		case SC_Exit: {
+			int status = machine->ReadRegister(4);
+    			do_Exit(status);
+			//Exit(0); // maybe we should update the syscall to also include the exit code from a register?
+			break;
+		}
 		//case SC_Exec:
 			// We need to implement Exec and figure out argument stuff
 		//break;
@@ -210,6 +213,19 @@ void ExceptionHandler(ExceptionType which) {
 			do_SemDestroy(sem_id);
 			break;
 
+		}
+		case SC_ForkExec: {
+			
+			char filename[MAX_FILENAME_LEN];
+			int userFileNameAddr = (int)machine->ReadRegister(4);
+			
+			if(!Helpers::CopyStringFromUser(userFileNameAddr,filename,MAX_FILENAME_LEN)){
+				machine->WriteRegister(2,-1); // return -1 as error
+				break;
+			}
+			int pid = do_ForkExec(filename);
+			machine->WriteRegister(2,pid);
+			break;
 		}
 		default: {
 			printf("Unexpected user mode exception %d %d\n", which, type);
