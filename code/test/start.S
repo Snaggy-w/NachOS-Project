@@ -260,6 +260,15 @@ ForkExec:
 	j	$31
 	.end 	ForkExec
 
+	.globl  KDEBUG
+	.ent	KDEBUG
+KDEBUG:
+	addiu $2, $0, SC_KDEBUG
+	syscall
+	j	$31
+	.end 	KDEBUG
+
+
 /* dummy function to keep gcc happy */
         .globl  __main
         .ent    __main

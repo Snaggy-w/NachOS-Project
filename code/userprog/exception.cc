@@ -227,6 +227,15 @@ void ExceptionHandler(ExceptionType which) {
 			machine->WriteRegister(2,pid);
 			break;
 		}
+		case SC_KDEBUG: {
+			char flag = (char)machine->ReadRegister(4);
+			char MSG[MAX_FILENAME_LEN];
+			int msg_ptr = (int)machine->ReadRegister(5);
+					
+			Helpers::CopyStringFromUser(msg_ptr,MSG,MAX_FILENAME_LEN);
+			DEBUG(flag,MSG);
+			break;
+		}
 		default: {
 			printf("Unexpected user mode exception %d %d\n", which, type);
 			ASSERT(FALSE);

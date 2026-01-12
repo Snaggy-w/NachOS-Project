@@ -20,8 +20,9 @@ int main(){
 	PutInt(pid2);
 	PutChar('\n');
 
-	//UserThreadJoin(-1);
-	//Halt();
-	for(;;) Yield();
+	
+	UserThreadJoin(-1);
+	Halt();
+	//for(;;) Yield();
 	return 0;
 }

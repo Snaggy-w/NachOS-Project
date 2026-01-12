@@ -13,6 +13,7 @@ void f(void *s){
 	for (i = 0; i < N; i++) puts((char *)s);
 }
 int main(){
+	KDEBUG('t',"started with userprog1\n");
 	UserThreadCreate(f, (void *) THIS);
 	f((void*) THAT);
 	UserThreadJoin(-1);
