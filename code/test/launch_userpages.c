@@ -14,7 +14,7 @@ int main(){
 	PutInt(pid1);
 	PutChar('\n');
 	mutex_lock(&m);
-	int pid2 = ForkExec("./userpages2");
+	int pid2 = ForkExec("./putchar");
 	mutex_unlock(&m);
 	PutString("Launched process with pid ");
 	PutInt(pid2);

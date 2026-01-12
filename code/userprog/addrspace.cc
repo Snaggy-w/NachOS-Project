@@ -60,7 +60,7 @@ static void SwapHeader(NoffHeader *noffH) {
 AddrSpace::AddrSpace(OpenFile *executable) {
     NoffHeader noffH;
     unsigned int i, size;
-
+    this->creation_status = 0;
     executable->ReadAt((char *)&noffH, sizeof(noffH), 0);
     if ((noffH.noffMagic != NOFFMAGIC) &&
         (WordToHost(noffH.noffMagic) == NOFFMAGIC))
@@ -85,6 +85,7 @@ AddrSpace::AddrSpace(OpenFile *executable) {
     if((int)numPages > frameProvider->NumAvailFrame()) {
         DEBUG('a', "Not enough space for the appending process.");
         numPages = 0; 
+	this->creation_status = -1;
         return; 
     }
     pageTable = new TranslationEntry[numPages];
@@ -101,6 +102,8 @@ AddrSpace::AddrSpace(OpenFile *executable) {
                                        // pages to be read-only
     }
 
+    machine->pageTable = pageTable;
+    machine->pageTableSize = numPages;
     // then, copy in the code and data segments into memory
     if (noffH.code.size > 0) {
         DEBUG('a', "Initializing code segment, at 0x%x, size %d\n",

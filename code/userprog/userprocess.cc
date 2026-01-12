@@ -7,16 +7,10 @@
 
 
 void StartUserProcess(int arg){
-    OpenFile *executable = (OpenFile *)arg;
     
-    AddrSpace *space = new AddrSpace(executable);
-    // set the address space of this thread as a completely new address space unlike user threads where they share the address space
-    currentThread->space = space;
 
-    delete executable;   // being clean by removing the executable object as it is no longer needed after being passed to AddrSpace
-
-    space->InitRegisters();
-    space->RestoreState();
+    currentThread->space->InitRegisters();
+    currentThread->space->RestoreState();
     machine->Run();
 }
 
@@ -30,9 +24,19 @@ int do_ForkExec(char *executable){
         	return -1;
     	}
 	
-	Thread *thread = new Thread(executable); // set the thread dbg name as the executable idk...
+        AddrSpace *space = new AddrSpace(exec);
 
-	thread->Fork(StartUserProcess, (int)exec);
+        delete exec;   // being clean by removing the executable object as it is no longer needed after being passed to AddrSpace
+	
+	if(space->creation_status == -1){
+		delete space;
+		return -1;
+	}
+	Thread *thread = new Thread(executable); // set the thread dbg name as the executable idk...
+	
+        // set the address space of this thread as a completely new address space unlike user threads where they share the address space
+	thread->space = space;
+	thread->Fork(StartUserProcess, (int)space);
 	return thread->tid; // for now return the pid as the tid
 
 }

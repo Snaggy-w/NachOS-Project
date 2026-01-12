@@ -25,7 +25,7 @@ class AddrSpace {
   public:
 
     BitMap * userStackSegmentMap;
-
+    int creation_status;
     AddrSpace(OpenFile *executable); // Create an address space,
     // initializing it with the program
     // stored in the file "executable"
