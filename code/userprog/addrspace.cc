@@ -82,9 +82,14 @@ AddrSpace::AddrSpace(OpenFile *executable) {
     DEBUG('a', "Initializing address space, num pages %d, size %d\n", numPages,
           size);
     // first, set up the translation
+    if(numPages > frameProvider->NumAvailFrame()) {
+        DEBUG('a', "Not enough space for the appending process.");
+        numPages = 0; 
+        return; 
+    }
     pageTable = new TranslationEntry[numPages];
     for (i = 0; i < numPages; i++) {
-        int physFrame = frameProvider->GetEmptyFrame(true);
+        int physFrame = frameProvider->GetEmptyFrame(false);
 
         pageTable[i].virtualPage = i; // for now, virtual page # = phys page #
         pageTable[i].physicalPage = physFrame;
@@ -103,7 +108,7 @@ AddrSpace::AddrSpace(OpenFile *executable) {
         // executable->ReadAt(&(machine->mainMemory[noffH.code.virtualAddr]),
         //                    noffH.code.size, noffH.code.inFileAddr);
         this->ReadAtVirtual(executable, noffH.code.virtualAddr, noffH.code.size,
-            noffH.code.inFileAddr, pageTable, numPages);
+            noffH.code.inFileAddr, pageTable, 0);
     }
     if (noffH.initData.size > 0) {
         DEBUG('a', "Initializing data segment, at 0x%x, size %d\n",
@@ -111,7 +116,7 @@ AddrSpace::AddrSpace(OpenFile *executable) {
 
 
         this->ReadAtVirtual(executable, noffH.initData.virtualAddr, noffH.initData.size,
-            noffH.initData.inFileAddr, pageTable, numPages);
+            noffH.initData.inFileAddr, pageTable, 0);
         // executable->ReadAt(&(machine->mainMemory[noffH.initData.virtualAddr]),
         //                    noffH.initData.size, noffH.initData.inFileAddr);
     }
@@ -129,6 +134,9 @@ AddrSpace::AddrSpace(OpenFile *executable) {
 AddrSpace::~AddrSpace() {
     // LB: Missing [] for delete
     // delete pageTable;
+    for(int i = 0; i < numPages; i++){
+        frameProvider->ReleaseFrame(pageTable[i].physicalPage);
+    }
     delete[] pageTable;
     delete userStackSegmentMap; 
     // End of modification
@@ -201,12 +209,24 @@ void AddrSpace:: ReadAtVirtual(
 
     char* tmpBuffer = new char[numBytes];
     executable->ReadAt(tmpBuffer, numBytes, position);
+      
+    int vpn = (unsigned)virtAddr / PageSize;
+    int offset = (unsigned)virtAddr % PageSize;
 
-    machine->pageTable = pageTable;
-    machine->pageTableSize = numPages;
+    int i = 0;
 
-    /// TODO: we could manipulate 4-byte words instead of byte by byte writing
-    for (int byteInd = 0; byteInd < numBytes; byteInd++) {
-        machine->WriteMem(virtualaddr + byteInd, 1, (int)tmpBuffer[byteInd]);
+    while(i <= numBytes){
+        TranslationEntry page = pageTable[vpn];
+        while(offset < PageSize && i <= numBytes) {
+            machine->WriteMem(page.virtualPage + offset, 1, (int)tmpBuffer[i]);
+            i++;
+            offset++;
+        }
+        vpn++;
+        offset = 0;
     }
+    /// TODO: we could manipulate 4-byte words instead of byte by byte writing
+    //for (int byteInd = 0; byteInd < numBytes; byteInd++) {
+      //  machine->WriteMem(virtualaddr + byteInd, 1, (int)tmpBuffer[byteInd]);
+    //}
 }
