@@ -4,6 +4,7 @@
 #include "thread.h"
 #include "filesys.h"
 #include "synch.h"
+#include "string.h"
 
 
 void StartUserProcess(int arg){
@@ -38,7 +39,9 @@ int do_ForkExec(char *executable){
 		return -1;
 	}
 
-	Thread *thread = new Thread("New Process"); // set the thread dbg name as the executable idk...
+	char* threadName = new char[strlen(executable)+1];
+	strcpy(threadName, executable);
+	Thread *thread = new Thread(threadName); // set the thread dbg name as the executable idk...
 	PIDCounterLock->Acquire(); {
 		int pid = ++PIDCounter;
 		
