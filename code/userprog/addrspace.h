@@ -43,7 +43,7 @@ class AddrSpace {
     // for now!
     unsigned int numPages; // Number of pages in the virtual
     // address space
-
+    unsigned int brk; // heap start
     static void ReadAtVirtual(
       OpenFile *executable, int virtualaddr, int numBytes, int position,
       TranslationEntry *pageTable, unsigned numPages);
