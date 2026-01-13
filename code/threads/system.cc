@@ -48,6 +48,8 @@ SynchList *PIDTable;
 int PIDCounter = 0;
 Lock *PIDCounterLock;
 Lock *ProcessLoopLock;
+Condition *AnyProcessExited;
+Lock *AnyProcessExitedLock;
 #endif
 #endif
 
@@ -168,6 +170,8 @@ void Initialize(int argc, char **argv) {
     PIDTable = new SynchList();
     PIDCounterLock = new Lock("PID counter lock");
     ProcessLoopLock = new Lock("Lock to loop over PID table");
+    AnyProcessExited = new Condition("Condition used to join processes");
+    AnyProcessExitedLock = new Lock("Condition used to join processes");
 #endif
 
 #ifdef FILESYS
