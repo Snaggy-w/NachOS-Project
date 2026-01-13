@@ -20,10 +20,11 @@ int main(){
 	PutInt(pid2);
 	PutChar('\n');
 
-	
-	//UserThreadJoin(-1);
-	//Halt();
 
-	for(;;) Yield();
+	ProcessJoin(pid1);	
+	PutString("Waited for pid 1");
+	Halt();
+
+	//for(;;) Yield();
 	return 0;
 }

@@ -227,6 +227,11 @@ void ExceptionHandler(ExceptionType which) {
 			machine->WriteRegister(2,pid);
 			break;
 		}
+		case SC_ProcessJoin: {
+			int pid = (int)machine->ReadRegister(4);
+			do_ProcessJoin(pid);
+			break;		     
+		}
 		case SC_KDEBUG: {
 			char flag = (char)machine->ReadRegister(4);
 			char MSG[MAX_FILENAME_LEN];

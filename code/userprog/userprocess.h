@@ -5,15 +5,20 @@
 
 #include "system.h"
 #include "thread.h"
+#include "synch.h"
+
 typedef struct process {
 	int pid;
 	Thread* thread;
 	int exit_status;
+	Lock *PIDLock;
+	Condition *PIDCond;	
 } process_t;
 
 
 // forks a kernel thread which should run a process of the specified executable
 int do_ForkExec(char* executable);
 void do_Exit(int status);
+void do_ProcessJoin(int pid);
 #endif
 

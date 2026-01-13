@@ -44,6 +44,7 @@
 #define SC_UserThreadJoin 24
 #define SC_ForkExec 25
 #define SC_KDEBUG 26
+#define SC_ProcessJoin 27
 #ifdef IN_USER_MODE
 
 // LB: This part is read only on compiling the test/*.c files.
@@ -154,6 +155,7 @@ int SemDestroy(int sem_id);
 
 int ForkExec(char * executable);
 void KDEBUG(char flag, char * msg);
+void ProcessJoin(int pid);
 #endif // IN_USER_MODE
 
 #endif /* SYSCALL_H */

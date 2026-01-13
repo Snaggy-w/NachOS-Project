@@ -3,7 +3,7 @@
 #include "addrspace.h"
 #include "thread.h"
 #include "filesys.h"
-
+#include "synch.h"
 
 
 void StartUserProcess(int arg){
@@ -46,7 +46,9 @@ int do_ForkExec(char *executable){
 		process_t *new_process = new process_t {
 			.pid = pid,
 			.thread = thread,
-			.exit_status = PROCESS_RUNNING
+			.exit_status = PROCESS_RUNNING,
+			.PIDLock = new Lock("process join Lock"),
+			.PIDCond = new Condition("process join Condition")
 		};
 		PIDTable->Append((void*)new_process);
 	} PIDCounterLock->Release();
@@ -57,10 +59,35 @@ int do_ForkExec(char *executable){
 	currentThread->space->RestoreState();
 	(void)interrupt->SetLevel(oldLevel);
 	return thread->tid; // for now return the pid as the tid
-
+	
 }
 
+void do_ProcessJoin(int pid){
+	// Search for PID, if not existent -> abort
+	bool found = false;
+	int index;
+	ProcessLoopLock->Acquire(); {
+		for(int i = 0; i < PIDTable->Size(); i++){
+			if(((process_t*)(PIDTable->GetAt(i)))->pid == pid){
+				found = true;
+				index = i;
+				break;
+			}
+		}
+		
+				
+	} ProcessLoopLock->Release();
 
+	if(!found)
+		return;
+
+		
+	while(((process_t*)(PIDTable->GetAt(index)))->exit_status == PROCESS_RUNNING)
+			((process_t*)(PIDTable->GetAt(index)))->PIDCond->Wait(
+					((process_t*)(PIDTable->GetAt(index)))->PIDLock
+			);
+
+}
 void do_Exit(int status) {
     AddrSpace *space = currentThread->space;
     //Thread * ref_thread = nullptr;
@@ -79,8 +106,10 @@ void do_Exit(int status) {
     proc_struct->exit_status = status;
     proc_struct->thread = nullptr;
     //delete ref_thread;
-     
+    proc_struct->PIDCond->Signal(proc_struct->PIDLock); // release the join    
 
+    delete proc_struct->PIDCond;
+    delete proc_struct->PIDLock;
     // Clean up address space
     delete space;
     currentThread->space = nullptr;

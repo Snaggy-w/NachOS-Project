@@ -11,6 +11,8 @@ void puts(char *s){
 void f(void *s){
 	int i; 
 	for (i = 0; i < N; i++) puts((char *)s);
+	int c = GetChar();
+	PutChar(c);
 }
 int main(){
 	KDEBUG('t',"started with userprog1\n");

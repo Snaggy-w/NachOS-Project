@@ -268,7 +268,13 @@ KDEBUG:
 	j	$31
 	.end 	KDEBUG
 
-
+	.globl  ProcessJoin
+	.ent	ProcessJoin
+ProcessJoin:
+	addiu $2, $0, SC_ProcessJoin
+	syscall
+	j	$31
+	.end 	ProcessJoin
 /* dummy function to keep gcc happy */
         .globl  __main
         .ent    __main
