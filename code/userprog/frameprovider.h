@@ -2,6 +2,7 @@
 #define FRAMEPROVIDER_H
 
 #include "bitmap.h"
+#include "synch.h"
 #include <stdlib.h> // for srand, rand
 #include <time.h> // for time
 
@@ -18,6 +19,8 @@ class FrameProvider {
         void ReleaseFrame(int physFrame);
 
         int NumAvailFrame();
+    private:
+        Semaphore* mainMemMap_sem;
 };
 
 
