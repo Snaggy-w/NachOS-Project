@@ -57,6 +57,7 @@ void BitMap::Mark(int which) {
 //----------------------------------------------------------------------
 
 void BitMap::Clear(int which) {
+    DEBUG('t',"Which = %d\n",which);
     ASSERT(which >= 0 && which < numBits);
     map[which / BitsInWord] &= ~(1 << (which % BitsInWord));
 }

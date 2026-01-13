@@ -22,7 +22,8 @@ int main(){
 
 	
 	//UserThreadJoin(-1);
-	Halt();
-	//for(;;) Yield();
+	//Halt();
+
+	for(;;) Yield();
 	return 0;
 }

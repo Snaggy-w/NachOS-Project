@@ -192,7 +192,7 @@ void Thread::Yield() {
 
     ASSERT(this == currentThread);
 
-    DEBUG('t', "Yielding thread \"%s\"\n", getName());
+    //DEBUG('t', "Yielding thread \"%s\"\n", getName());
 
     nextThread = scheduler->FindNextToRun();
     if (nextThread != NULL) {

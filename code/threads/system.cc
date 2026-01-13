@@ -8,6 +8,7 @@
 #include "system.h"
 #include "frameprovider.h"
 #include "copyright.h"
+#include "synch.h"
 
 // This defines *all* of the global data structures used by Nachos.
 // These are all initialized and de-allocated by this file.
@@ -43,7 +44,10 @@ PostOffice *postOffice;
  */
 SynchConsole *synchconsole;
 FrameProvider *frameProvider;
-
+SynchList *PIDTable;
+int PIDCounter = 0;
+Lock *PIDCounterLock;
+Lock *ProcessLoopLock;
 #endif
 #endif
 
@@ -161,6 +165,9 @@ void Initialize(int argc, char **argv) {
      */
     synchconsole = new SynchConsole(NULL,NULL);
     frameProvider = new FrameProvider();
+    PIDTable = new SynchList();
+    PIDCounterLock = new Lock("PID counter lock");
+    ProcessLoopLock = new Lock("Lock to loop over PID table");
 #endif
 
 #ifdef FILESYS

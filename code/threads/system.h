@@ -16,6 +16,9 @@
 #include "timer.h"
 #include "utility.h"
 #include "synchconsole.h"
+#include "synchlist.h"
+#include "synch.h"
+
 // Initialization and cleanup routines
 extern void Initialize(int argc, char **argv); // Initialization,
                                                // called before anything else
@@ -43,6 +46,10 @@ extern FrameProvider *frameProvider;
  */
 extern SynchConsole *synchconsole;
 extern char * STRING_BUFFER;
+extern SynchList *PIDTable;
+extern int PIDCounter;
+extern Lock *PIDCounterLock;
+extern Lock *ProcessLoopLock;
 #endif
 
 #ifdef FILESYS_NEEDED // FILESYS or FILESYS_STUB
