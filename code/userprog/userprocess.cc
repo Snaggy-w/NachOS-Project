@@ -50,6 +50,8 @@ int do_ForkExec(char *executable){
 			.pid = pid,
 			.thread = thread,
 			.exit_status = PROCESS_RUNNING,
+			.exited = false,
+			.joined = false,
 			.PIDLock = new Lock("process join Lock"),
 			.PIDCond = new Condition("process join Condition")
 		};
@@ -61,11 +63,36 @@ int do_ForkExec(char *executable){
 	thread->Fork(StartUserProcess, (int)space);
 	currentThread->space->RestoreState();
 	(void)interrupt->SetLevel(oldLevel);
-	return thread->tid; // for now return the pid as the tid
+	return thread->tid; // return the tid as the pid (just store it there) 
 	
 }
 
+int FindAnyJoinableProcess() {
+    ProcessLoopLock->Acquire();
+    for (int i = 0; i < PIDTable->Size(); i++) {
+        process_t *p = (process_t *)PIDTable->GetAt(i);
+        if (p->exited && !p->joined) {
+            ProcessLoopLock->Release();
+            return i;
+        }
+    }
+    ProcessLoopLock->Release();
+    return -1;
+}
+
 void do_ProcessJoin(int pid){
+	
+	if(pid == PROCESS_JOIN_ANY){
+		process_t *p = nullptr;
+		int index;
+		AnyProcessExitedLock->Acquire();
+		while((index = FindAnyJoinableProcess()) == -1)
+			AnyProcessExited->Wait(AnyProcessExitedLock);
+		p = (process_t *)PIDTable->GetAt(index);
+		p->joined = true;
+		return;
+	}
+	
 	// Search for PID, if not existent -> abort
 	bool found = false;
 	int index;
@@ -107,10 +134,12 @@ void do_Exit(int status) {
     } ProcessLoopLock->Release();
     DEBUG('t',"Exited PID %d\n",proc_struct->pid); 
     proc_struct->exit_status = status;
+    proc_struct->exited = true;
+    proc_struct->joined = false;
     proc_struct->thread = nullptr;
     //delete ref_thread;
     proc_struct->PIDCond->Signal(proc_struct->PIDLock); // release the join    
-
+    AnyProcessExited->Signal(AnyProcessExitedLock);
     delete proc_struct->PIDCond;
     delete proc_struct->PIDLock;
     // Clean up address space

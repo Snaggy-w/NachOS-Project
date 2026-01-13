@@ -2,6 +2,7 @@
 #define USERPROCESS_H
 
 #define PROCESS_RUNNING -2
+#define PROCESS_JOIN_ANY -1
 
 #include "system.h"
 #include "thread.h"
@@ -11,6 +12,8 @@ typedef struct process {
 	int pid;
 	Thread* thread;
 	int exit_status;
+	bool exited;
+	bool joined;
 	Lock *PIDLock;
 	Condition *PIDCond;	
 } process_t;

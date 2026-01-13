@@ -50,6 +50,10 @@ extern SynchList *PIDTable;
 extern int PIDCounter;
 extern Lock *PIDCounterLock;
 extern Lock *ProcessLoopLock;
+
+extern Condition *AnyProcessExited;
+extern Lock *AnyProcessExitedLock;
+
 #endif
 
 #ifdef FILESYS_NEEDED // FILESYS or FILESYS_STUB

@@ -1,28 +1,32 @@
 #include "syscall.h"
 #include "libthread.h"
 
-mutex_lock_t m;
+//mutex_lock_t m;
+//cond_t c;
 
 int main(){
 
-	mutex_init(&m);
+	//mutex_init(&m);
+	//cond_init(&c);
 	PutString("Started...");
-	mutex_lock(&m);
+	//mutex_lock(&m);
 	int pid1 = ForkExec("./userpages");
-	mutex_unlock(&m);
+	//mutex_unlock(&m);
 	PutString("Launched process with pid ");
 	PutInt(pid1);
 	PutChar('\n');
-	mutex_lock(&m);
-	int pid2 = ForkExec("./userpages2");
-	mutex_unlock(&m);
+	//mutex_lock(&m);
+	int pid2 = -1;
+	//mutex_unlock(&m);
 	PutString("Launched process with pid ");
 	PutInt(pid2);
 	PutChar('\n');
 
-
-	ProcessJoin(pid1);	
+	while((pid2 = ForkExec("./userpages2")) == -1)
+		ProcessJoin(-1);	
 	PutString("Waited for pid 1");
+	ProcessJoin(pid2);
+	PutString("Waited for pid 2");
 	Halt();
 
 	//for(;;) Yield();
