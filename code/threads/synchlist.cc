@@ -98,3 +98,71 @@ void SynchList::Mapcar(VoidFunctionPtr func) {
 bool SynchList::IsEmpty() {
 	return list->IsEmpty();
 }
+
+void SynchList::SortedInsert(void *item, long long key) {
+    lock->Acquire();
+    list->SortedInsert(item, key);
+    listEmpty->Signal(lock);
+    lock->Release();
+}
+
+void *SynchList::SortedRemove(long long *keyPtr) {
+    void *item;
+
+    lock->Acquire();
+    while (list->IsEmpty())
+        listEmpty->Wait(lock);
+
+    item = list->SortedRemove(keyPtr);
+    ASSERT(item != NULL);
+    lock->Release();
+    return item;
+}
+
+void *SynchList::SortedGet(long long key) {
+    lock->Acquire();
+    void *item = list->SortedGet(key);
+    lock->Release();
+    return item;
+}
+
+void *SynchList::SortedRemoveByKey(long long key) {
+    lock->Acquire();
+    void *item = list->SortedRemoveByKey(key);
+    lock->Release();
+    return item;
+}
+
+void SynchList::InsertAt(void *item, int index) {
+    lock->Acquire();
+    list->InsertAt(item, index);
+    listEmpty->Signal(lock);
+    lock->Release();
+}
+
+void *SynchList::RemoveAt(int index) {
+    lock->Acquire();
+    void *item = list->RemoveAt(index);
+    lock->Release();
+    return item;
+}
+
+void SynchList::DropAt(int index) {
+    lock->Acquire();
+    list->DropAt(index);
+    lock->Release();
+}
+
+void *SynchList::GetAt(int index) {
+    lock->Acquire();
+    void *item = list->GetAt(index);
+    lock->Release();
+    return item;
+}
+
+int SynchList::Size() {
+    lock->Acquire();
+    int size = list->Size();
+    lock->Release();
+    return size;
+}

@@ -217,8 +217,9 @@ void AddrSpace:: ReadAtVirtual(
     int offset = (unsigned)virtualaddr % PageSize;
 
     int i = 0;
-
+    //DEBUG('t',"Creating an address space...\n");
     while(i <= numBytes){
+	//DEBUG('t',"Infinite loop?\n");
         TranslationEntry page = pageTable[vpn];
         while(offset < PageSize && i <= (int)numBytes) {
             machine->WriteMem((page.virtualPage * PageSize) + offset, 1, (int)tmpBuffer[i]);

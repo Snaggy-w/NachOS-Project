@@ -33,6 +33,17 @@ class SynchList {
     // apply function to every item in the list
     void Mapcar(VoidFunctionPtr func);
     bool IsEmpty();
+    int Size();
+
+    void InsertAt(void *item, int index);
+    void *GetAt(int index);
+    void DropAt(int index);
+    void *RemoveAt(int index);
+
+    void SortedInsert(void *item, long long key);
+    void *SortedRemove(long long *keyPtr);     
+    void *SortedGet(long long key);             
+    void *SortedRemoveByKey(long long key);
   private:
     List *list;           // the unsynchronized list
     Lock *lock;           // enforce mutual exclusive access to the list

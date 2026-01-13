@@ -59,7 +59,7 @@ Semaphore::~Semaphore() { delete queue; }
 
 void Semaphore::P() {
     IntStatus oldLevel = interrupt->SetLevel(IntOff); // disable interrupts
-
+    DEBUG('t',"Waiting on semaphore %s\n",this->name);
     while (value == 0) {                      // semaphore not available
         queue->Append((void *)currentThread); // so go to sleep
         currentThread->Sleep();
@@ -81,7 +81,7 @@ void Semaphore::P() {
 void Semaphore::V() {
     Thread *thread;
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
-
+    DEBUG('t',"Posting on semaphore %s\n",this->name);
     thread = (Thread *)queue->Remove();
     if (thread != NULL) // make thread ready, consuming the V immediately
         scheduler->ReadyToRun(thread);
