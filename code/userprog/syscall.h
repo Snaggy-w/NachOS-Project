@@ -45,6 +45,9 @@
 #define SC_ForkExec 25
 #define SC_KDEBUG 26
 #define SC_ProcessJoin 27
+#define SC_AllocEmptyPage 28
+#define SC_FreePage 29
+
 #ifdef IN_USER_MODE
 
 #define PROCESS_JOIN_ANY -1
