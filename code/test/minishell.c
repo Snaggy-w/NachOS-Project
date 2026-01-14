@@ -15,11 +15,12 @@ int main() {
 	int i = 0;
 	while (buffer[i] != '\0') {
 	    if (buffer[i] == '\n' || buffer[i] == '\r') {
-		buffer[i] = '\0';
-		break;
+		    buffer[i] = '\0';
+		    break;
 	    }
 	    i++;
 	}
+
         arg1[0] = '\0';
         arg2[0] = '\0';
 
@@ -28,20 +29,20 @@ int main() {
 
         if (arg1[0] == '\0')
             continue; // empty command
-	
-	if(str_cmp(arg1,"exit") == 0)
-		break;
-	
+
+        if(str_cmp(arg1,"exit") == 0)
+            break;
+        
         if (arg2[0] == '&') {
             while(ForkExec(arg1) == -1)
-		ProcessJoin(-1);
+                ProcessJoin(-1);
         } else {
             int pid = -1;
-	    while( (pid = ForkExec(arg1)) == -1)
-		    ProcessJoin(-1);
+            while( (pid = ForkExec(arg1)) == -1)
+                ProcessJoin(-1);
             if (pid >= 0)
                 ProcessJoin(pid);
         }
-    }
+    } 
     Halt();
 }
