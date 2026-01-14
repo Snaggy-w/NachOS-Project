@@ -45,8 +45,8 @@
 #define SC_ForkExec 25
 #define SC_KDEBUG 26
 #define SC_ProcessJoin 27
-#define SC_AllocEmptyPage 28
-#define SC_FreePage 29
+#define SC_GetProcessHeapSize 28
+#define SC_Sbrk 29
 
 #ifdef IN_USER_MODE
 
@@ -161,6 +161,10 @@ int SemDestroy(int sem_id);
 int ForkExec(char * executable);
 void KDEBUG(char flag, char * msg);
 void ProcessJoin(int pid);
+
+void* Sbrk();
+unsigned int GetProcessHeapSize();
+
 #endif // IN_USER_MODE
 
 #endif /* SYSCALL_H */

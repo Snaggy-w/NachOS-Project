@@ -275,6 +275,24 @@ ProcessJoin:
 	syscall
 	j	$31
 	.end 	ProcessJoin
+
+	.globl  GetProcessHeapSize
+	.ent	GetProcessHeapSize
+GetProcessHeapSize:
+	addiu $2, $0, SC_GetProcessHeapSize
+	syscall
+	j	$31
+	.end 	GetProcessHeapSize
+
+	.globl  Sbrk
+	.ent	Sbrk
+Sbrk:
+	addiu $2, $0, SC_Sbrk
+	syscall
+	j	$31
+	.end 	Sbrk
+
+
 /* dummy function to keep gcc happy */
         .globl  __main
         .ent    __main

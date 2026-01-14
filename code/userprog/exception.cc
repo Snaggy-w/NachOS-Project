@@ -27,6 +27,7 @@
 #include "userthread.h"
 #include "helpers.h"
 #include "userprocess.h"
+#include "addrspace.h"
 //----------------------------------------------------------------------
 // UpdatePC : Increments the Program Counter register in order to resume
 // the user program immediately after the "syscall" instruction.
@@ -239,6 +240,14 @@ void ExceptionHandler(ExceptionType which) {
 					
 			Helpers::CopyStringFromUser(msg_ptr,MSG,MAX_FILENAME_LEN);
 			DEBUG(flag,MSG);
+			break;
+		}
+		case SC_GetProcessHeapSize: {
+			machine->WriteRegister(2, (int)ProcessHeapSize);
+			break;
+		}
+		case SC_Sbrk: {
+			machine->WriteRegister(2, currentThread->space->GetBrk());
 			break;
 		}
 		default: {

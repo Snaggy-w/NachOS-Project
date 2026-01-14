@@ -69,7 +69,7 @@ AddrSpace::AddrSpace(OpenFile *executable) {
 
     // how big is address space?
     size = noffH.code.size + noffH.initData.size + noffH.uninitData.size +
-           UserStackSize; // we need to increase the size
+           UserStackSize + ProcessHeapSize; // we need to increase the size
     // to leave room for the stack
     numPages = divRoundUp(size, PageSize);
     size = numPages * PageSize;
@@ -233,4 +233,8 @@ void AddrSpace:: ReadAtVirtual(
     //for (int byteInd = 0; byteInd < numBytes; byteInd++) {
       //  machine->WriteMem(virtualaddr + byteInd, 1, (int)tmpBuffer[byteInd]);
     //}
+}
+
+int AddrSpace::GetBrk() {
+    return this->brk;
 }

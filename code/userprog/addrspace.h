@@ -19,6 +19,7 @@
 #include "bitmap.h"
 
 #define UserStackSize 4096 // increase this as necessary!
+#define ProcessHeapSize 4096 // per process
 #define UserStackSegment (PageSize * 2) // the size of the chunk used as a user thread's stack
 
 class AddrSpace {
@@ -37,7 +38,7 @@ class AddrSpace {
     void SaveState();    // Save/restore address space-specific
     void RestoreState(); // info on a context switch
     unsigned int GetNumPages(); // A getter of numPages 
-    int Sbrk(unsigned int n); // implements sbrk syscall
+    int GetBrk();
   
   private:
     TranslationEntry *pageTable; // Assume linear page table translation
