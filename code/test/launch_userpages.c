@@ -23,9 +23,9 @@ int main(){
 	PutChar('\n');
 
 	while((pid2 = ForkExec("./userpages2")) == -1)
-		ProcessJoin(-1);	
+		ProcessJoin(PROCESS_JOIN_ANY);	
 	PutString("Waited for pid 1");
-	ProcessJoin(pid2);
+	ProcessJoin(-1);
 	PutString("Waited for pid 2");
 	Halt();
 

@@ -83,14 +83,30 @@ int FindAnyJoinableProcess() {
 void do_ProcessJoin(int pid){
 	
 	if(pid == PROCESS_JOIN_ANY){
-		process_t *p = nullptr;
+		/*process_t *p = nullptr;
 		int index;
 		AnyProcessExitedLock->Acquire();
 		while((index = FindAnyJoinableProcess()) == -1)
 			AnyProcessExited->Wait(AnyProcessExitedLock);
 		p = (process_t *)PIDTable->GetAt(index);
 		p->joined = true;
-		return;
+		return;*/
+
+		//SemExitedProcesses->P();
+		//return;
+		    SemExitedProcesses->P();
+
+	    	// Consume exactly ONE exited process
+		    ProcessLoopLock->Acquire();
+		    for (int i = 0; i < PIDTable->Size(); i++) {
+			process_t *p = (process_t *)PIDTable->GetAt(i);
+			if (p->exited && !p->joined) {
+			    p->joined = true;   
+			    break;
+			}
+		    }
+		    ProcessLoopLock->Release();
+		    return;
 	}
 	
 	// Search for PID, if not existent -> abort
@@ -132,6 +148,8 @@ void do_Exit(int status) {
 	    //ref_thread = ((process_t*)(PIDTable->GetAt(index)))->thread;
 	    proc_struct = (process_t*)(PIDTable->GetAt(index));
     } ProcessLoopLock->Release();
+
+    delete space;
     DEBUG('t',"Exited PID %d\n",proc_struct->pid); 
     proc_struct->exit_status = status;
     proc_struct->exited = true;
@@ -140,10 +158,10 @@ void do_Exit(int status) {
     //delete ref_thread;
     proc_struct->PIDCond->Signal(proc_struct->PIDLock); // release the join    
     AnyProcessExited->Signal(AnyProcessExitedLock);
-    delete proc_struct->PIDCond;
-    delete proc_struct->PIDLock;
+    SemExitedProcesses->V();
+    //delete proc_struct->PIDCond;
+    //delete proc_struct->PIDLock;
     // Clean up address space
-    delete space;
     currentThread->space = nullptr;
 
     // Terminate kernel thread

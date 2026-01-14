@@ -53,7 +53,7 @@ extern Lock *ProcessLoopLock;
 
 extern Condition *AnyProcessExited;
 extern Lock *AnyProcessExitedLock;
-
+extern Semaphore *SemExitedProcesses;
 #endif
 
 #ifdef FILESYS_NEEDED // FILESYS or FILESYS_STUB

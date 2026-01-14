@@ -50,6 +50,7 @@ Lock *PIDCounterLock;
 Lock *ProcessLoopLock;
 Condition *AnyProcessExited;
 Lock *AnyProcessExitedLock;
+Semaphore *SemExitedProcesses;
 #endif
 #endif
 
@@ -172,6 +173,7 @@ void Initialize(int argc, char **argv) {
     ProcessLoopLock = new Lock("Lock to loop over PID table");
     AnyProcessExited = new Condition("Condition used to join processes");
     AnyProcessExitedLock = new Lock("Condition used to join processes");
+    SemExitedProcesses = new Semaphore("Semaphore used to join processes",0);
 #endif
 
 #ifdef FILESYS

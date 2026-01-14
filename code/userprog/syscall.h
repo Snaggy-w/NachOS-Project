@@ -47,6 +47,8 @@
 #define SC_ProcessJoin 27
 #ifdef IN_USER_MODE
 
+#define PROCESS_JOIN_ANY -1
+
 // LB: This part is read only on compiling the test/*.c files.
 // It is *not* read on compiling test/start.S
 
