@@ -204,6 +204,11 @@ void Cleanup() {
     delete synchconsole;
     delete frameProvider;
     delete STRING_BUFFER;
+    delete PIDCounterLock;
+    delete ProcessLoopLock;
+    delete AnyProcessExited;
+    delete AnyProcessExitedLock;
+    delete SemExitedProcesses;
 #endif
 
 #ifdef FILESYS_NEEDED

@@ -83,30 +83,20 @@ int FindAnyJoinableProcess() {
 void do_ProcessJoin(int pid){
 	
 	if(pid == PROCESS_JOIN_ANY){
-		/*process_t *p = nullptr;
-		int index;
-		AnyProcessExitedLock->Acquire();
-		while((index = FindAnyJoinableProcess()) == -1)
-			AnyProcessExited->Wait(AnyProcessExitedLock);
-		p = (process_t *)PIDTable->GetAt(index);
-		p->joined = true;
-		return;*/
+		
+		SemExitedProcesses->P();
 
-		//SemExitedProcesses->P();
-		//return;
-		    SemExitedProcesses->P();
-
-	    	// Consume exactly ONE exited process
-		    ProcessLoopLock->Acquire();
-		    for (int i = 0; i < PIDTable->Size(); i++) {
+		// Consume exactly ONE exited process
+		ProcessLoopLock->Acquire();
+		for (int i = 0; i < PIDTable->Size(); i++) {
 			process_t *p = (process_t *)PIDTable->GetAt(i);
 			if (p->exited && !p->joined) {
-			    p->joined = true;   
-			    break;
+				p->joined = true;   
+				break;
 			}
-		    }
-		    ProcessLoopLock->Release();
-		    return;
+		}
+		ProcessLoopLock->Release();
+		return;
 	}
 	
 	// Search for PID, if not existent -> abort
@@ -157,7 +147,6 @@ void do_Exit(int status) {
     proc_struct->thread = nullptr;
     //delete ref_thread;
     proc_struct->PIDCond->Signal(proc_struct->PIDLock); // release the join    
-    AnyProcessExited->Signal(AnyProcessExitedLock);
     SemExitedProcesses->V();
     //delete proc_struct->PIDCond;
     //delete proc_struct->PIDLock;
