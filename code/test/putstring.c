@@ -5,6 +5,5 @@ int main(){
     char s2[] = "whatever\n";
     PutString(s);
     PutString(s2);   
-    Halt();
-    return 0;
+    Exit(0);
 }

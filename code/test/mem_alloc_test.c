@@ -1,9 +1,9 @@
 // test_alloc.c
 #include "syscall.h"
 #include "mem_alloc.h"
-
+#include "libstd.h"
 void test_simple_alloc() {
-    memory_init(4096);
+    //memory_init();
     
     int *p1 = (int *)memory_alloc(sizeof(int) * 10);
     int *p2 = (int *)memory_alloc(sizeof(int) * 20);
@@ -22,5 +22,6 @@ void test_simple_alloc() {
 
 int main() {
     test_simple_alloc();
+    //Halt();
     Exit(0);
 }

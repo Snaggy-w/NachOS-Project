@@ -34,12 +34,16 @@ int main() {
             break;
         
         if (arg2[0] == '&') {
-            while(ForkExec(arg1) == -1)
+            while(ForkExec(arg1) == -1){
+		PutString("Out of memory");	
                 ProcessJoin(-1);
+	    }
         } else {
             int pid = -1;
-            while( (pid = ForkExec(arg1)) == -1)
+            while( (pid = ForkExec(arg1)) == -1){
+		PutString("Out of memory");
                 ProcessJoin(-1);
+	    }
             if (pid >= 0)
                 ProcessJoin(pid);
         }

@@ -10,7 +10,7 @@ typedef unsigned int SizeT;
 
 
 /* Allocator functions, to be implemented in mem_alloc.c */
-extern void* memory_init(SizeT size);
+extern void* memory_init(void);
 extern void *memory_alloc(SizeT size);
 extern void memory_free(void *p);
 extern unsigned int memory_get_allocated_block_size(void *addr);

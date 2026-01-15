@@ -33,5 +33,6 @@ int main() {
     }
 
     PutString("Main: all threads joined\n");
-    Halt();
+    //Halt();
+    Exit(0);
 }

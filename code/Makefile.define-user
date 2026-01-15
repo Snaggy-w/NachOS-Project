@@ -25,7 +25,7 @@ USERPROG_NOPROGRAM=
 # IMPORTANT: the 4 original user programs (halt, ...) cannot have extra
 #  sources and will always be linked only with start.S (USERPROG_LIBS
 #  and ..._EXTRA_SOURCES are ignored for them)
-USERPROG_LIBS=start.S libgcc.c libthread.c libstr.c mem_alloc.c
+USERPROG_LIBS=start.S libgcc.c libthread.c libstr.c mem_alloc.c libstd.c
 
 # each program 'p' can specify extra sources in 'p'_EXTRA_SOURCES
 # => declare here program sources to add in addition to

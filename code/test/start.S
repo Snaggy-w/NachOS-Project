@@ -20,13 +20,28 @@
  * -------------------------------------------------------------
  */
 
+.weak	user_init
+
 	.globl __start
 	.ent	__start
 __start:
-	jal	main
+	//jal	main
+	jal	premain // jump to stub that will setup process before main
 	move	$4,$0		
 	jal	Exit	 /* if we return from main, exit(0) */
 	.end __start
+
+
+	.globl	premain
+	.ent	premain
+premain:
+	jal	user_init
+	nop
+	jal	main
+	move	$4,$0
+	j Exit
+	.end	premain
+
 
 /* -------------------------------------------------------------
  * System call stubs:

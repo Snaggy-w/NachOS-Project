@@ -1,5 +1,5 @@
 #include "mem_alloc.h"
-
+#include "syscall.h"
 #include "mem_alloc_types.h"
 
 
@@ -44,6 +44,7 @@ void* memory_alloc_impl(SizeT size) {
     //looking for the first fitting free block
     while (curr && safe_size > round_up(curr->size + sizeof(memblk_free_t)))
     {
+	//KDEBUG('t',"~~");
         curr = curr->next;
     }
 
@@ -96,7 +97,7 @@ void* memory_alloc_impl(SizeT size) {
             curr_next->prev = curr_prev;
         }
     }
-
+    KDEBUG('t',"Done alloc\n");
     void* payload = (void*)((char*)allocated + aligned_alloc_header_size);
     //print_alloc_info(payload, size);
 
@@ -111,7 +112,7 @@ void run_at_exit(void)
     /* TODO: insert your code here */
 }
 
-void* memory_init(SizeT size)
+void* memory_init(void)
 {
     /* register the function that will be called when the programs exits */
     //atexit(run_at_exit);
