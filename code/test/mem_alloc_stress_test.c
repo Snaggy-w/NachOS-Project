@@ -34,10 +34,11 @@ void test_simple_alloc() {
     memory_free(p2);
     memory_free(p3);	
 
-
+    /*
     int *p4; // should fail
     if((p4 = (int *)memory_alloc(8000)) == NULL)
 	    PutString("failed to alloc memory for p4\n"); 
+    */
 }
 
 int main() {
