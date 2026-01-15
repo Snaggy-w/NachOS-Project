@@ -3,10 +3,10 @@
 #define   	_MEM_ALLOC_H_
 
 typedef unsigned int SizeT;
-#define NULL (void*)0
-#define nullptr (void*)0
+/*#define NULL (void*)0
+#define nullptr (void*)0*/
 #include "syscall.h"
-
+#include "common.h"
 
 
 /* Allocator functions, to be implemented in mem_alloc.c */

@@ -44,7 +44,7 @@ void* memory_alloc_impl(SizeT size) {
     //looking for the first fitting free block
     while (curr && safe_size > round_up(curr->size + sizeof(memblk_free_t)))
     {
-	//KDEBUG('t',"~~");
+	KDEBUG('t',"~~");
         curr = curr->next;
     }
 
