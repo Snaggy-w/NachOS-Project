@@ -79,6 +79,19 @@ AddrSpace::AddrSpace(OpenFile *executable) {
     // at least until we have
     // virtual memory
 
+    // get the reference to all sections by size
+    unsigned int endCode = noffH.code.virtualAddr + noffH.code.size;
+    unsigned int endInit = noffH.initData.virtualAddr + noffH.initData.size;
+    unsigned int endBss  = noffH.uninitData.virtualAddr + noffH.uninitData.size;
+
+    // setup the end of the code + bss sections in case one of them doesn't exist for example
+    unsigned int endProg = endCode;
+    if (endInit > endProg) endProg = endInit;
+    if (endBss  > endProg) endProg = endBss;
+
+    // setup brk based on endProg and page align it with the arithmetic operation below
+    this->brk = (int)(((endProg + PageSize - 1) / PageSize) * PageSize);
+
     DEBUG('a', "Initializing address space, num pages %d, size %d\n", numPages,
           size);
     // first, set up the translation
