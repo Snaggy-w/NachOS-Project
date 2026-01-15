@@ -60,6 +60,7 @@ extern void ThreadTest(void),
 extern void Print(char *file), PerformanceTest(void);
 extern void StartProcess(char *file), ConsoleTest(char *in, char *out), SynchConsoleTest(char *in, char *out);
 extern void MailTest(int networkID);
+extern void RingTest(int nbmachine);
 
 //----------------------------------------------------------------------
 // main
@@ -145,6 +146,14 @@ int main(int argc, char **argv) {
             // to give the user time to
             // start up another nachos
             MailTest(atoi(*(argv + 1)));
+            argCount = 2;
+        } 
+        else if (!strcmp(*argv, "-r")) {
+            ASSERT(argc > 1);
+            Delay(5); // delay for 5 seconds
+            // to give the user time to
+            // start up another nachos
+            RingTest(atoi(*(argv + 1)));
             argCount = 2;
         }
 #endif // NETWORK

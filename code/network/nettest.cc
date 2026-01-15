@@ -46,7 +46,8 @@ MailTest(int farAddr)
             // construct packet, mail header for original message
         // To: destination machine, mailbox 0
         // From: our machine, reply to: mailbox 1
-        outPktHdr.to = farAddr;		
+        outPktHdr.to = farAddr;	
+        	
         outMailHdr.to = 0;
         outMailHdr.from = 1;
         outMailHdr.length = strlen(data) + 1;
@@ -92,9 +93,9 @@ RingTest(int nbMachine)
     // From: our machine, reply to: mailbox 1
 
     // sends to machine + 1 or to machine 0 if it's the last machine
-    if(postOffice->netAddr < nbMachines - 1){
-        outPktHdr.to = postOffice->netAddr + 1;
-    }else if(postOffice->netAddr == nbMachines - 1){
+    if(postOffice->GetAddress() < nbMachine - 1){
+        outPktHdr.to = postOffice->GetAddress() + 1;
+    }else if(postOffice->GetAddress() == nbMachine - 1){
         outPktHdr.to = 0;
     }	
     
