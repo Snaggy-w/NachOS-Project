@@ -24,6 +24,7 @@
 #include "utility.h"
 #include "filehdr.h"
 #include "directory.h"
+#include <stdlib.h>
 
 //----------------------------------------------------------------------
 // Directory::Directory
@@ -40,8 +41,20 @@ Directory::Directory(int size)
     table = new DirectoryEntry[size];
     tableSize = size;
     for (int i = 0; i < tableSize; i++)
-	table[i].inUse = FALSE;
+        table[i].inUse = FALSE;
 }
+
+
+    //finding space for the 2 file headers using sector = freeMap->Find();	// find a sector to hold the file header
+    //need to keep track of prev dir and curr dir
+    //hdr = new FileHeader; if (!hdr->Allocate(freeMap, initialSize)) //allocates dataSector[i]
+    //write the data in the datasector using WriteSector
+    //flush the changes in disk of the free map, dir and hdr
+                       // hdr->WriteBack(sector); 		
+                    // directory->WriteBack(directoryFile);
+                    // freeMap->WriteBack(freeMapFile);
+
+
 
 //----------------------------------------------------------------------
 // Directory::~Directory

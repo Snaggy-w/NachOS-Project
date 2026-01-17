@@ -60,6 +60,8 @@ extern Semaphore *SemExitedProcesses;
 #ifdef FILESYS_NEEDED // FILESYS or FILESYS_STUB
 #include "filesys.h"
 extern FileSystem *fileSystem;
+extern Directory *currentDirectory;
+extern Directory *previousDirectory;
 #endif
 
 #ifdef FILESYS

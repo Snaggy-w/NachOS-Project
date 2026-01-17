@@ -23,6 +23,8 @@ Timer *timer;                // the hardware timer device,
 char * STRING_BUFFER;
 #ifdef FILESYS_NEEDED
 FileSystem *fileSystem;
+Directory *currentDirectory;
+Directory *previousDirectory;
 #endif
 
 #ifdef FILESYS
@@ -182,6 +184,8 @@ void Initialize(int argc, char **argv) {
 
 #ifdef FILESYS_NEEDED
     fileSystem = new FileSystem(format);
+    currentDirectory = fileSystem->createRootDirectory();
+    previousDirectory = nullptr;
 #endif
 
 #ifdef NETWORK
@@ -213,6 +217,8 @@ void Cleanup() {
 
 #ifdef FILESYS_NEEDED
     delete fileSystem;
+    delete currentDirectory;
+    delete previousDirectory;
 #endif
 
 #ifdef FILESYS
