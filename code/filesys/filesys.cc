@@ -83,6 +83,7 @@ FileSystem::FileSystem(bool format)
     if (format) {
         BitMap *freeMap = new BitMap(NumSectors);
         Directory *directory = new Directory(NumDirEntries);
+        directory->sector = DirectorySector;
 	FileHeader *mapHdr = new FileHeader;
 	FileHeader *dirHdr = new FileHeader;
 
@@ -179,13 +180,13 @@ FileSystem::Create(const char *name, int initialSize)
     Directory *directory;
     BitMap *freeMap;
     FileHeader *hdr;
-    OpenFile* currentDirFile;
     int sector;
     bool success;
 
     DEBUG('f', "Creating file %s, size %d\n", name, initialSize);
 
     directory = currentDirectory; //we track in which dir we are
+    DEBUG('f', "Directory from sector %d\n", directory->sector);
 
     if (directory->Find(name) != -1)
       success = FALSE;			// file is already in directory
@@ -205,16 +206,13 @@ FileSystem::Create(const char *name, int initialSize)
                 success = TRUE;
             // everything worked, flush all changes back to disk
                     hdr->WriteBack(sector); 		
-                    currentDirFile = new OpenFile(directory->sector);
-                    directory->WriteBack(currentDirFile);   
-                    delete currentDirFile;
+                    directory->WriteBack(directoryFile);   
                     freeMap->WriteBack(freeMapFile);
             }
                 delete hdr;
         }
         delete freeMap;
     }
-    delete directory;
     return success;
 }
 
@@ -232,6 +230,7 @@ OpenFile *
 FileSystem::Open(const char *name)
 { 
     Directory *directory = currentDirectory; //same here, we want to open a file residing in the current directory.
+    DEBUG('f', "Directory from sector %d\n", directory->sector);
     OpenFile *openFile = NULL;
     int sector;
 
@@ -239,7 +238,6 @@ FileSystem::Open(const char *name)
     sector = directory->Find(name); 
     if (sector >= 0) 		
 	openFile = new OpenFile(sector);	// name was found in directory 
-    delete directory;
     return openFile;				// return NULL if not found
 }
 
@@ -263,7 +261,6 @@ FileSystem::Remove(const char *name)
     Directory *directory;
     BitMap *freeMap;
     FileHeader *fileHdr;
-    OpenFile* currentDirFile; 
     int sector;
     
     directory = currentDirectory;
@@ -283,11 +280,8 @@ FileSystem::Remove(const char *name)
     directory->Remove(name);
 
     freeMap->WriteBack(freeMapFile);		// flush to disk
-    currentDirFile = new OpenFile(directory->sector);
-    directory->WriteBack(currentDirFile);   
-    delete currentDirFile;     
+    directory->WriteBack(directoryFile);   
     delete fileHdr;
-    delete directory;
     delete freeMap;
     return TRUE;
 } 
@@ -302,7 +296,6 @@ FileSystem::List()
 {
     Directory *directory = currentDirectory;
     directory->List();
-    delete directory;
 }
 
 //----------------------------------------------------------------------
@@ -356,7 +349,6 @@ Directory* FileSystem::createRootDirectory(){
     Directory *directory;
     BitMap *freeMap;
     FileHeader *hdr;
-    OpenFile* currentDirFile;
     int sector;
     bool success;
 
@@ -376,6 +368,8 @@ Directory* FileSystem::createRootDirectory(){
     strcpy(newDir->table[1].name, "..");
     newDir->table[1].sector = previousDirectory == nullptr ? currentDirectory->sector : previousDirectory->sector; //just a convention
 
+    DEBUG('f', "First dir entry %s\n", newDir->table[0].name);
+    DEBUG('f', "Second dir entry %s\n", newDir->table[1].name);
     DEBUG('f', "Creating directory %s, size %d\n", name, NumDirEntries);
 
     if (directory->Find(name) != -1)
@@ -395,16 +389,16 @@ Directory* FileSystem::createRootDirectory(){
                 success = TRUE;
             // everything worked, flush all changes back to disk
                     hdr->WriteBack(sector); 		
-                    currentDirFile = new OpenFile(directory->sector);
-                    directory->WriteBack(currentDirFile);    // flush to disk
-                    delete currentDirFile;
+                    directory->WriteBack(directoryFile);    // flush to disk
                     freeMap->WriteBack(freeMapFile);
+                    OpenFile* newDirFile = new OpenFile(newDir->sector);
+                    newDir->WriteBack(newDirFile);
+                    delete newDirFile;
             }
                 delete hdr;
         }
         delete freeMap;
     }
-    delete directory;
     return success;
 }
 
@@ -414,16 +408,23 @@ bool FileSystem::changeDirectory(const char* name) {
     int dirSector = currentDirectory->Find(name);
     if (dirSector == -1)
         return FALSE;
-
     Directory* dir = new Directory(NumDirEntries);
-    OpenFile* dirFile = new OpenFile(dirSector);
 
-    dir->FetchFrom(dirFile);
+    currentDirectory->WriteBack(directoryFile); 
+    
+    directoryFile = new OpenFile(dirSector);// this member file always stays open, like the freemap header file throughout the exec of Nachos.
+    DEBUG('f', "Changing to dir residing in sector %d\n", dirSector);
+
+    dir->FetchFrom(directoryFile);
 
     previousDirectory = currentDirectory;  
     currentDirectory = dir;
 
-    delete dirFile;
+    DEBUG('f', "First dir entry %s\n", currentDirectory->table[0].name);
+    DEBUG('f', "Second dir entry %s\n", currentDirectory->table[1].name);
+
+    DEBUG('f', "First dir entry prevDir %s\n", previousDirectory->table[0].name);
+    DEBUG('f', "Second dir entry prevDir %s\n", previousDirectory->table[1].name); 
     return TRUE;
 }
 
@@ -437,7 +438,7 @@ bool FileSystem::deleteDirectory(const char* dirName) {
 
     dir->FetchFrom(dirFile);
 
-    for (int k = 2; k < dir->tableSize; k++) {
+    for (int k = 2; k < dir->tableSize; k++) { // from k = 2 because we don't care about .. and .
         if (dir->table[k].inUse == TRUE) {
             delete dirFile;
             delete dir;
@@ -457,10 +458,8 @@ bool FileSystem::deleteDirectory(const char* dirName) {
 
     freeMap->WriteBack(freeMapFile);
 
-    OpenFile* currentDirFile = new OpenFile(currentDirectory->sector);
-    currentDirectory->WriteBack(currentDirFile);
+    currentDirectory->WriteBack(directoryFile);
 
-    delete currentDirFile;
     delete freeMap;
     delete fileHdr;
     delete dirFile;

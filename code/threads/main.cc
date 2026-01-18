@@ -136,7 +136,19 @@ int main(int argc, char **argv) {
             fileSystem->Print();
         } else if (!strcmp(*argv, "-t")) { // performance test
             PerformanceTest();
+        } else if(!strcmp(*argv, "-mkdir")) {
+            fileSystem->createDirectory(*(argv + 1));
+        } else if(!strcmp(*argv, "-cd")) {
+            fileSystem->changeDirectory(*(argv + 1));
+        } else if (!strcmp(*argv, "-rd")) {
+            fileSystem->deleteDirectory(*(argv + 1));
+        } else if (!strcmp(*argv, "-touch")) {
+            ASSERT(argc > 1);
+            fileSystem->Create(*(argv + 1), atoi(*(argv + 2)));
+            argCount = 2;
         }
+
+        
 #endif // FILESYS
 #ifdef NETWORK
         if (!strcmp(*argv, "-o")) {
