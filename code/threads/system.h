@@ -70,6 +70,8 @@ extern SynchDisk *synchDisk;
 #ifdef NETWORK
 #include "post.h"
 extern PostOffice *postOffice;
+#include "reliable.h"
+extern ReliablePost *reliablePost;
 #endif
 
 #endif // SYSTEM_H

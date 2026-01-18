@@ -9,7 +9,7 @@
 #include "frameprovider.h"
 #include "copyright.h"
 #include "synch.h"
-
+#include "reliable.h"
 // This defines *all* of the global data structures used by Nachos.
 // These are all initialized and de-allocated by this file.
 
@@ -35,6 +35,7 @@ Machine *machine;   // user program memory and registers
 
 #ifdef NETWORK
 PostOffice *postOffice;
+ReliablePost *reliablePost = 0;
 #endif
 
 #ifdef CHANGED
@@ -186,6 +187,7 @@ void Initialize(int argc, char **argv) {
 
 #ifdef NETWORK
     postOffice = new PostOffice(netname, rely, 10);
+reliablePost = new ReliablePost(postOffice, /*localMailbox=*/0, "reliablePost");
 #endif
 }
 
