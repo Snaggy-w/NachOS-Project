@@ -60,6 +60,7 @@ extern void ThreadTest(void),
 extern void Print(char *file), PerformanceTest(void);
 extern void StartProcess(char *file), ConsoleTest(char *in, char *out), SynchConsoleTest(char *in, char *out);
 extern void MailTest(int networkID);
+extern void DirectoryTest(void);
 
 //----------------------------------------------------------------------
 // main
@@ -146,8 +147,9 @@ int main(int argc, char **argv) {
             ASSERT(argc > 1);
             fileSystem->Create(*(argv + 1), atoi(*(argv + 2)));
             argCount = 2;
-        }
-
+        } else if (!strcmp(*argv, "-dirtest")) {
+            DirectoryTest();
+        }   
         
 #endif // FILESYS
 #ifdef NETWORK

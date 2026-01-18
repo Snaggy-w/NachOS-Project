@@ -229,13 +229,12 @@ FileSystem::Create(const char *name, int initialSize)
 OpenFile *
 FileSystem::Open(const char *name)
 { 
-    Directory *directory = currentDirectory; //same here, we want to open a file residing in the current directory.
-    DEBUG('f', "Directory from sector %d\n", directory->sector);
+    DEBUG('f', "Directory from sector %d\n", currentDirectory->sector);
     OpenFile *openFile = NULL;
     int sector;
 
     DEBUG('f', "Opening file %s\n", name);
-    sector = directory->Find(name); 
+    sector = currentDirectory->Find(name); 
     if (sector >= 0) 		
 	openFile = new OpenFile(sector);	// name was found in directory 
     return openFile;				// return NULL if not found
@@ -266,7 +265,6 @@ FileSystem::Remove(const char *name)
     directory = currentDirectory;
     sector = directory->Find(name);
     if (sector == -1) {
-       delete directory;
        return FALSE;			 // file not found 
     }
     fileHdr = new FileHeader;
@@ -341,6 +339,7 @@ Directory* FileSystem::createRootDirectory(){
     Directory* dir = new Directory(NumDirEntries);
     ASSERT(directoryFile != NULL);
     dir->FetchFrom(directoryFile);
+    dir->sector = DirectorySector;
     return dir;
 }
 
@@ -358,31 +357,34 @@ Directory* FileSystem::createRootDirectory(){
     freeMap = new BitMap(NumSectors);
     freeMap->FetchFrom(freeMapFile);
 
-    newDir->table[0].inUse = TRUE;
-    newDir->table[0].isDirectory = TRUE;
-    strcpy(newDir->table[0].name, ".");
-    newDir->table[0].sector = currentDirectory->sector;
-
-    newDir->table[1].inUse = TRUE;
-    newDir->table[1].isDirectory = TRUE;
-    strcpy(newDir->table[1].name, "..");
-    newDir->table[1].sector = previousDirectory == nullptr ? currentDirectory->sector : previousDirectory->sector; //just a convention
-
-    DEBUG('f', "First dir entry %s\n", newDir->table[0].name);
-    DEBUG('f', "Second dir entry %s\n", newDir->table[1].name);
-    DEBUG('f', "Creating directory %s, size %d\n", name, NumDirEntries);
 
     if (directory->Find(name) != -1)
       success = FALSE;			// file is already in directory
     else {	
         sector = freeMap->Find();	// find a sector to hold the file header
-        newDir->sector = sector;
     	if (sector == -1) 		
             success = FALSE;		// no free block for file header 
         else if (!directory->Add(name, sector))
             success = FALSE;	// no space in directory
         else {
-                hdr = new FileHeader;
+
+            newDir->sector = sector;
+
+            newDir->table[0].inUse = TRUE;
+            newDir->table[0].isDirectory = TRUE;
+            strcpy(newDir->table[0].name, ".");
+            newDir->table[0].sector = newDir->sector;
+
+            newDir->table[1].inUse = TRUE;
+            newDir->table[1].isDirectory = TRUE;
+            strcpy(newDir->table[1].name, "..");
+            newDir->table[1].sector = directory->sector; //just a convention
+
+            DEBUG('f', "First dir entry %s\n", newDir->table[0].name);
+            DEBUG('f', "Second dir entry %s\n", newDir->table[1].name);
+            DEBUG('f', "Creating directory %s, size %d\n", name, NumDirEntries);
+
+            hdr = new FileHeader;
             if (!hdr->Allocate(freeMap, newDir->tableSize * sizeof(DirectoryEntry)))
                     success = FALSE;	// no space on disk for data
             else {	
@@ -420,11 +422,11 @@ bool FileSystem::changeDirectory(const char* name) {
     previousDirectory = currentDirectory;  
     currentDirectory = dir;
 
-    DEBUG('f', "First dir entry %s\n", currentDirectory->table[0].name);
-    DEBUG('f', "Second dir entry %s\n", currentDirectory->table[1].name);
+    DEBUG('f', "First dir entry in currentDir is %s\n", currentDirectory->table[0].name);
+    DEBUG('f', "Second dir entry in currentDir is %s\n", currentDirectory->table[1].name);
 
-    DEBUG('f', "First dir entry prevDir %s\n", previousDirectory->table[0].name);
-    DEBUG('f', "Second dir entry prevDir %s\n", previousDirectory->table[1].name); 
+    DEBUG('f', "First dir entry in previousDir is %s\n", previousDirectory->table[0].name);
+    DEBUG('f', "Second dir entry in previousDir is %s\n", previousDirectory->table[1].name); 
     return TRUE;
 }
 
