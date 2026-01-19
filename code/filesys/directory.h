@@ -62,7 +62,9 @@ class Directory {
     int Find(const char *name);		// Find the sector number of the 
 					// FileHeader for file: "name"
 
-    bool Add(const char *name, int newSector);  // Add a file name into the directory
+    int FindDirectory(const char *name);
+
+    bool Add(const char *name, int newSector, bool isDirectory = false);  // Add a file name into the directory
 
     bool Remove(const char *name);	// Remove a file from the directory
 

@@ -120,6 +120,8 @@ class FileSystem {
 
 	Directory* resolvePath(const char* path, char* lastName); // get directory based on the path to it
 
+	int getDirectorySector(const char* path, char* dirName);
+
 };
 #endif // FILESYS
 
