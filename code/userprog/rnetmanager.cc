@@ -1,4 +1,3 @@
-// userprog/rnetmanager.cc
 #ifdef NETWORK
 
 #include "synch.h"
@@ -8,6 +7,11 @@
 #include "thread.h"
 #include <string.h>
 
+
+/* CopyBytesFromUser:
+ * 	Helper function to copy series of bytes from userspace
+ * 
+ */
 static bool CopyBytesFromUser(int userAddr, char* dst, int n) {
     for (int i = 0; i < n; i++) {
         int v;
@@ -16,7 +20,9 @@ static bool CopyBytesFromUser(int userAddr, char* dst, int n) {
     }
     return true;
 }
-
+/* CopyBytesToUser:
+ *	Helper function to copy series of bytes to userspace
+ */
 static bool CopyBytesToUser(int userAddr, const char* src, int n) {
     for (int i = 0; i < n; i++) {
         if (!machine->WriteMem(userAddr + i, 1, (int)(unsigned char)src[i])) return false;
@@ -24,10 +30,15 @@ static bool CopyBytesToUser(int userAddr, const char* src, int n) {
     return true;
 }
 
+
+/* WriteIntToUser:
+ *	Helper function to write an integer to userspace
+ */
 static bool WriteIntToUser(int userAddr, int value) {
     return machine->WriteMem(userAddr, (int)sizeof(int), value);
 }
 
+/* constructor : setup the handlers table */
 RNetManager::RNetManager()
 : lock(new Lock("rnet manager lock"))
 {
@@ -44,6 +55,7 @@ RNetManager::RNetManager()
     }
 }
 
+/* destructor: clean the table of handlers and left over data pointers */
 RNetManager::~RNetManager() {
     lock->Acquire();
     for (int i = 0; i < MAX_RNET_HANDLES; i++) {
@@ -67,14 +79,20 @@ RNetManager::~RNetManager() {
     lock = 0;
 }
 
+/* helper function to lookup the handler if it is valid for use or not */
 bool RNetManager::Valid(int h) const {
     return (h >= 0 && h < MAX_RNET_HANDLES && table[h].used && table[h].rp != 0);
 }
 
+
+/* Socket:
+ * 	create a new handler and tie it to a new reliable post object
+ *
+ */
 int RNetManager::Socket(int localMailbox) {
     lock->Acquire();
 
-    // Optional: prevent same mailbox twice within the same process
+    // prevent same mailbox twice within the same process
     for (int i = 0; i < MAX_RNET_HANDLES; i++) {
         if (table[i].used && table[i].localMailbox == localMailbox) {
             lock->Release();
