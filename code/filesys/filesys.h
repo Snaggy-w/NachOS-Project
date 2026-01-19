@@ -66,6 +66,14 @@ class FileSystem {
 };
 
 #else // FILESYS
+
+class OpenFileListEntry {
+	public:
+		OpenFile* file;
+		int sector; //the header sector of this file
+		int refCount;
+};
+
 class FileSystem {
   public:
     FileSystem(bool format);		// Initialize the file system.
@@ -79,6 +87,8 @@ class FileSystem {
 					// Create a file (UNIX creat)
 
     OpenFile* Open(const char *name); 	// Open a file (UNIX open)
+
+	void Close(const char* name); // Close an open file residing in openFileList
 
     bool Remove(const char *name); 	// Delete a file (UNIX unlink)
 

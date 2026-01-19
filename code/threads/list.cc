@@ -296,6 +296,30 @@ int List::Size() {
 	return n;
 }
 
+int List::isExistElement(void* elt) {
+    int index = 0;
+    for (ListElement* p = first; p != NULL; p = p->next) {
+        if (p->item == elt) {
+            return index;
+        }
+        index++;
+    }
+    return -1; 
+}
+
+
+int List::FindIf(ListComparator cmp, void* arg) {
+    int index = 0;
+    for (ListElement* p = first; p != NULL; p = p->next) {
+        if (cmp(p->item, arg)) {
+            return index;
+        }
+        index++;
+    }
+    return -1;
+}
+
+
 void *List::GetAt(int index){
 	if(index < 0)
 		return NULL;

@@ -34,6 +34,7 @@ extern Timer *timer;                // the hardware alarm clock
 
 #define MAX_STRING_SIZE 201 // Can't put more since large sizes can crash the kernel stack
 			    // the last byte is to account for the Null byte terminator at the end
+#define MAX_OPEN_FILES 10
 
 #ifdef USER_PROGRAM
 #include "machine.h"
@@ -61,7 +62,7 @@ extern Semaphore *SemExitedProcesses;
 #include "filesys.h"
 extern FileSystem *fileSystem;
 extern Directory *currentDirectory;
-extern Directory *previousDirectory;
+extern SynchList *openFileList;
 #endif
 
 #ifdef FILESYS

@@ -153,6 +153,20 @@ void SynchList::DropAt(int index) {
     lock->Release();
 }
 
+int SynchList::isExistElement(void* elt){
+    lock->Acquire();
+    int index = list->isExistElement(elt);
+    lock->Release();
+    return index;
+}
+
+int SynchList::FindIf(ListComparator cmp, void* arg) {
+    lock->Acquire();
+    int index = list->FindIf(cmp, arg);
+    lock->Release();
+    return index;
+}
+
 void *SynchList::GetAt(int index) {
     lock->Acquire();
     void *item = list->GetAt(index);

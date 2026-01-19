@@ -77,6 +77,12 @@
 //	"format" -- should we initialize the disk?
 //----------------------------------------------------------------------
 
+bool MatchSector(void* item, void* arg) {
+    OpenFileListEntry* entry = (OpenFileListEntry*) item;
+    int sector = *(int*) arg;
+    return entry->sector == sector;
+}
+
 FileSystem::FileSystem(bool format)
 { 
     DEBUG('f', "Initializing the file system.\n");
@@ -225,19 +231,54 @@ FileSystem::Create(const char *name, int initialSize)
 //
 //	"name" -- the text name of the file to be opened
 //----------------------------------------------------------------------
-
 OpenFile *
 FileSystem::Open(const char *name)
 { 
     DEBUG('f', "Directory from sector %d\n", currentDirectory->sector);
-    OpenFile *openFile = NULL;
-    int sector;
-
     DEBUG('f', "Opening file %s\n", name);
-    sector = currentDirectory->Find(name); 
-    if (sector >= 0) 		
-	openFile = new OpenFile(sector);	// name was found in directory 
-    return openFile;				// return NULL if not found
+
+    int sector = currentDirectory->Find(name);
+    if (sector < 0)
+        return NULL;
+
+    int fileIndex = openFileList->FindIf(MatchSector, &sector);
+    
+    if (fileIndex != -1) {
+        OpenFileListEntry* entry = (OpenFileListEntry*) openFileList->GetAt(fileIndex);
+        entry->refCount++;
+        return entry->file;
+    }
+
+    if (openFileList->Size() >= MAX_OPEN_FILES)
+        return NULL;
+
+    OpenFile* openFile = new OpenFile(sector);
+    OpenFileListEntry* newEntry = new OpenFileListEntry;
+    newEntry->file = openFile;
+    newEntry->sector = sector;
+    newEntry->refCount = 1;
+
+    openFileList->Append(newEntry);
+    return openFile;
+}
+
+void FileSystem::Close(const char* name) {
+    int sector = currentDirectory->Find(name);
+    ASSERT(sector >= 0);
+
+    int fileIndex = openFileList->FindIf(MatchSector, &sector);
+    ASSERT(fileIndex != -1);
+
+    OpenFileListEntry* entry = (OpenFileListEntry*) openFileList->GetAt(fileIndex);
+
+    ASSERT(entry->refCount > 0);
+    entry->refCount--;
+
+    if (entry->refCount == 0) {
+        entry = (OpenFileListEntry*) openFileList->RemoveAt(fileIndex);
+        delete entry->file;
+        delete entry;
+    }
 }
 
 //----------------------------------------------------------------------
@@ -267,6 +308,10 @@ FileSystem::Remove(const char *name)
     if (sector == -1) {
        return FALSE;			 // file not found 
     }
+
+    if (openFileList->FindIf(MatchSector, &sector) != -1) //if file is somewhere opened, there's a reason for it
+        return FALSE;
+  
     fileHdr = new FileHeader;
     fileHdr->FetchFrom(sector);
 
@@ -419,14 +464,11 @@ bool FileSystem::changeDirectory(const char* name) {
 
     dir->FetchFrom(directoryFile);
 
-    previousDirectory = currentDirectory;  
     currentDirectory = dir;
 
     DEBUG('f', "First dir entry in currentDir is %s\n", currentDirectory->table[0].name);
     DEBUG('f', "Second dir entry in currentDir is %s\n", currentDirectory->table[1].name);
 
-    DEBUG('f', "First dir entry in previousDir is %s\n", previousDirectory->table[0].name);
-    DEBUG('f', "Second dir entry in previousDir is %s\n", previousDirectory->table[1].name); 
     return TRUE;
 }
 
@@ -469,4 +511,3 @@ bool FileSystem::deleteDirectory(const char* dirName) {
 
     return TRUE;
 }
-

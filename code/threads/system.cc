@@ -25,6 +25,7 @@ char * STRING_BUFFER;
 FileSystem *fileSystem;
 Directory *currentDirectory;
 Directory *previousDirectory;
+SynchList* openFileList;
 #endif
 
 #ifdef FILESYS
@@ -185,7 +186,7 @@ void Initialize(int argc, char **argv) {
 #ifdef FILESYS_NEEDED
     fileSystem = new FileSystem(format);
     currentDirectory = fileSystem->createRootDirectory();
-    previousDirectory = nullptr;
+    openFileList = new SynchList();
 #endif
 
 #ifdef NETWORK
@@ -218,7 +219,7 @@ void Cleanup() {
 #ifdef FILESYS_NEEDED
     delete fileSystem;
     delete currentDirectory;
-    delete previousDirectory;
+    delete openFileList;
 #endif
 
 #ifdef FILESYS

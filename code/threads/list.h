@@ -24,6 +24,9 @@
 // Internal data structures kept public so that List operations can
 // access them directly.
 
+typedef bool (*ListComparator)(void* item, void* arg);
+
+
 class ListElement {
   public:
     ListElement(void *itemPtr, long long sortKey); // initialize a list element
@@ -61,6 +64,8 @@ class List {
     void DropAt(int index);
     void *RemoveAt(int index);
     // Routines to put/get items on/off list in order (sorted by key)
+    int FindIf(ListComparator cmp, void* arg);
+    int isExistElement(void* elt);
     void SortedInsert(void *item, long long sortKey); // Put item into list
     void *SortedRemove(long long *keyPtr); // Remove first item from list
     void *SortedRemoveByKey(long long key); // Remove the first element on the list with the specified key
