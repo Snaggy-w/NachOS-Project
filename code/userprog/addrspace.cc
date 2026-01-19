@@ -21,6 +21,7 @@
 #include "system.h"
 #include "frameprovider.h"
 #include <strings.h> /* for bzero */
+#include "rnetmanager.h"
 
 //----------------------------------------------------------------------
 // SwapHeader
@@ -140,6 +141,11 @@ AddrSpace::AddrSpace(OpenFile *executable) {
     // initializing the bitmap for user stack segments (stored within this address space)
     this->userStackSegmentMap = new BitMap((int)(UserStackSize / UserStackSegment));
     this->userStackSegmentMap->Mark(0); // marking the segment for the "default" main thread
+
+    #ifdef NETWORK
+        rnet = new RNetManager();
+    #endif
+
 }
 
 //----------------------------------------------------------------------
@@ -155,6 +161,11 @@ AddrSpace::~AddrSpace() {
     }
     delete[] pageTable;
     delete userStackSegmentMap; 
+    #ifdef NETWORK
+        delete rnet;
+        rnet = 0;
+    #endif
+
     // End of modification
 }
 

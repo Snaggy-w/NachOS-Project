@@ -52,3 +52,32 @@ int str_cmp(const char *a, const char *b) {
 
     return (unsigned char)a[i] - (unsigned char)b[i];
 }
+
+
+void strcpy(char *dst, const char *src, int cap) {
+    int i = 0;
+    if (cap <= 0) return;
+    while (src[i] && i < cap - 1) {
+        dst[i] = src[i];
+        i++;
+    }
+    dst[i] = '\0';
+}
+
+int atoi(const char *s) {
+    int i = 0, sign = 1, v = 0;
+    while (s[i] == ' ' || s[i] == '\t' || s[i] == '\n' || s[i] == '\r') i++;
+    if (s[i] == '-') { sign = -1; i++; }
+    while (s[i] >= '0' && s[i] <= '9') {
+        v = v * 10 + (s[i] - '0');
+        i++;
+    }
+    return v * sign;
+}
+
+
+int strlen(const char *s) {
+    int n = 0;
+    while (s && s[n]) n++;
+    return n;
+}

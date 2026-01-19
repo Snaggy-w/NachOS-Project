@@ -307,6 +307,71 @@ Sbrk:
 	j	$31
 	.end 	Sbrk
 
+	.globl  RNetSocket
+	.ent    RNetSocket
+RNetSocket:
+    	addiu $2,$0,SC_RNetSocket
+   	syscall
+    	j   $31
+    	.end RNetSocket
+
+    	.globl  RNetClose
+    	.ent    RNetClose
+RNetClose:
+    	addiu $2,$0,SC_RNetClose
+    	syscall
+    	j   $31
+    	.end RNetClose
+
+    	.globl  RNetSendFixed
+    	.ent    RNetSendFixed
+RNetSendFixed:
+    	addiu $2,$0,SC_RNetSendFixed
+    	syscall
+    	j   $31
+    	.end RNetSendFixed
+
+    	.globl  RNetRecvFixed
+    	.ent    RNetRecvFixed
+RNetRecvFixed:
+    	addiu $2,$0,SC_RNetRecvFixed
+    	syscall
+    	j   $31
+    	.end RNetRecvFixed
+
+    	.globl  RNetSendVar
+    	.ent    RNetSendVar
+RNetSendVar:
+    	addiu $2,$0,SC_RNetSendVar
+    	syscall
+    	j   $31
+    	.end RNetSendVar
+
+    	.globl  RNetRecvVarBegin
+    	.ent    RNetRecvVarBegin
+RNetRecvVarBegin:
+    	addiu $2,$0,SC_RNetRecvVarBegin
+    	syscall
+    	j   $31
+    	.end RNetRecvVarBegin
+
+    	.globl  RNetRecvVarRead
+    	.ent    RNetRecvVarRead
+RNetRecvVarRead:
+    	addiu $2,$0,SC_RNetRecvVarRead
+    	syscall
+    	j   $31
+    	.end RNetRecvVarRead
+
+    	.globl  RNetRecvVarEnd
+    	.ent    RNetRecvVarEnd
+RNetRecvVarEnd:
+    	addiu $2,$0,SC_RNetRecvVarEnd
+    	syscall
+    	j   $31
+    	.end RNetRecvVarEnd
+
+
 
 /* dummy function to keep gcc happy */
         .globl  __main

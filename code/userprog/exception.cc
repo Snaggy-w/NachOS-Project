@@ -28,6 +28,24 @@
 #include "helpers.h"
 #include "userprocess.h"
 #include "addrspace.h"
+
+
+#ifdef NETWORK
+#include "rnetmanager.h"
+#endif
+
+// A helper function that is used to copy over large number of arguments
+static bool CopyArgsFromUser(int userPtr, int* out, int nInts) {
+    for (int i = 0; i < nInts; i++) {
+        int v;
+        if (!machine->ReadMem(userPtr + i*(int)sizeof(int), (int)sizeof(int), &v)) return false;
+        out[i] = v;
+    }
+    return true;
+}
+
+
+
 //----------------------------------------------------------------------
 // UpdatePC : Increments the Program Counter register in order to resume
 // the user program immediately after the "syscall" instruction.
@@ -250,6 +268,97 @@ void ExceptionHandler(ExceptionType which) {
 			machine->WriteRegister(2, currentThread->space->GetBrk());
 			break;
 		}
+
+
+		#ifdef NETWORK
+
+		case SC_RNetSocket: {
+		    int up = machine->ReadRegister(4);
+		    int a[2];
+		    if (!CopyArgsFromUser(up, a, 1)) { machine->WriteRegister(2, -1); break; }
+		    if (!currentThread->space || !currentThread->space->rnet) { machine->WriteRegister(2, -1); break; }
+		    int h = currentThread->space->rnet->Socket(a[0]); // a0 = localMailbox
+		    machine->WriteRegister(2, h);
+		    break;
+		}
+
+		case SC_RNetClose: {
+		    int up = machine->ReadRegister(4);
+		    int a[2];
+		    if (!CopyArgsFromUser(up, a, 1)) { machine->WriteRegister(2, -1); break; }
+		    if (!currentThread->space || !currentThread->space->rnet) { machine->WriteRegister(2, -1); break; }
+		    machine->WriteRegister(2, currentThread->space->rnet->Close(a[0])); // a0 = handle
+		    break;
+		}
+
+		case SC_RNetSendFixed: {
+		    int up = machine->ReadRegister(4);
+		    int a[6];
+		    // a0=h a1=dstM a2=dstB a3=buf a4=len
+		    if (!CopyArgsFromUser(up, a, 5)) { machine->WriteRegister(2, -1); break; }
+		    if (!currentThread->space || !currentThread->space->rnet) { machine->WriteRegister(2, -1); break; }
+		    int rc = currentThread->space->rnet->SendFixed(a[0], a[1], a[2], a[3], a[4]);
+		    machine->WriteRegister(2, rc);
+		    break;
+		}
+
+		case SC_RNetRecvFixed: {
+		    int up = machine->ReadRegister(4);
+		    int a[6];
+		    // a0=h a1=buf a2=cap a3=&srcM a4=&srcB
+		    if (!CopyArgsFromUser(up, a, 5)) { machine->WriteRegister(2, -1); break; }
+		    if (!currentThread->space || !currentThread->space->rnet) { machine->WriteRegister(2, -1); break; }
+		    int n = currentThread->space->rnet->RecvFixed(a[0], a[1], a[2], a[3], a[4]);
+		    machine->WriteRegister(2, n);
+		    break;
+		}
+
+		case SC_RNetSendVar: {
+		    int up = machine->ReadRegister(4);
+		    int a[6];
+		    // a0=h a1=dstM a2=dstB a3=buf a4=len
+		    if (!CopyArgsFromUser(up, a, 5)) { machine->WriteRegister(2, -1); break; }
+		    if (!currentThread->space || !currentThread->space->rnet) { machine->WriteRegister(2, -1); break; }
+		    int rc = currentThread->space->rnet->SendVar(a[0], a[1], a[2], a[3], a[4]);
+		    machine->WriteRegister(2, rc);
+		    break;
+		}
+
+		case SC_RNetRecvVarBegin: {
+		    int up = machine->ReadRegister(4);
+		    int a[6];
+		    // a0=h a1=&outLen a2=&srcM a3=&srcB
+		    if (!CopyArgsFromUser(up, a, 4)) { machine->WriteRegister(2, -1); break; }
+		    if (!currentThread->space || !currentThread->space->rnet) { machine->WriteRegister(2, -1); break; }
+		    int rc = currentThread->space->rnet->RecvVarBegin(a[0], a[1], a[2], a[3]);
+		    machine->WriteRegister(2, rc);
+		    break;
+		}
+
+		case SC_RNetRecvVarRead: {
+		    int up = machine->ReadRegister(4);
+		    int a[6];
+		    // a0=h a1=buf a2=cap
+		    if (!CopyArgsFromUser(up, a, 3)) { machine->WriteRegister(2, -1); break; }
+		    if (!currentThread->space || !currentThread->space->rnet) { machine->WriteRegister(2, -1); break; }
+		    int n = currentThread->space->rnet->RecvVarRead(a[0], a[1], a[2]);
+		    machine->WriteRegister(2, n);
+		    break;
+		}
+
+		case SC_RNetRecvVarEnd: {
+		    int up = machine->ReadRegister(4);
+		    int a[2];
+		    // a0=h
+		    if (!CopyArgsFromUser(up, a, 1)) { machine->WriteRegister(2, -1); break; }
+		    if (!currentThread->space || !currentThread->space->rnet) { machine->WriteRegister(2, -1); break; }
+		    int rc = currentThread->space->rnet->RecvVarEnd(a[0]);
+		    machine->WriteRegister(2, rc);
+		    break;
+		}
+
+	#endif // NETWORK
+
 		default: {
 			printf("Unexpected user mode exception %d %d\n", which, type);
 			ASSERT(FALSE);

@@ -22,6 +22,12 @@
 #define ProcessHeapSize 4096 // per process
 #define UserStackSegment (PageSize * 2) // the size of the chunk used as a user thread's stack
 
+#ifdef NETWORK
+#include "rnetmanager.h"
+#endif
+
+
+
 class AddrSpace {
   public:
 
@@ -39,7 +45,9 @@ class AddrSpace {
     void RestoreState(); // info on a context switch
     unsigned int GetNumPages(); // A getter of numPages 
     int GetBrk();
-  
+#ifdef NETWORK
+    RNetManager* rnet;
+#endif  
   private:
     TranslationEntry *pageTable; // Assume linear page table translation
     // for now!

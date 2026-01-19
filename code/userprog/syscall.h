@@ -47,6 +47,15 @@
 #define SC_ProcessJoin 27
 #define SC_GetProcessHeapSize 28
 #define SC_Sbrk 29
+#define SC_RNetSocket 30
+#define SC_RNetClose 31
+#define SC_RNetSendFixed 32
+#define SC_RNetRecvFixed 33
+#define SC_RNetSendVar 34
+#define SC_RNetRecvVarBegin 35
+#define SC_RNetRecvVarRead 36
+#define SC_RNetRecvVarEnd 37
+
 
 #ifdef IN_USER_MODE
 
@@ -164,6 +173,25 @@ void ProcessJoin(int pid);
 
 void* Sbrk();
 unsigned int GetProcessHeapSize();
+
+
+typedef struct {
+    int a0, a1, a2, a3, a4, a5;
+} RNetArgs;
+
+// Raw syscalls: each takes a pointer to RNetArgs in user memory
+// we use an array as we have a restriction on the number of registers 
+int RNetSocket(RNetArgs* a);
+int RNetClose(RNetArgs* a);
+
+int RNetSendFixed(RNetArgs* a);
+int RNetRecvFixed(RNetArgs* a);
+
+int RNetSendVar(RNetArgs* a);
+
+int RNetRecvVarBegin(RNetArgs* a);
+int RNetRecvVarRead(RNetArgs* a);
+int RNetRecvVarEnd(RNetArgs* a);
 
 #endif // IN_USER_MODE
 
