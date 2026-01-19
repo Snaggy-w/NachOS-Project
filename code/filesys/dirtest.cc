@@ -7,10 +7,11 @@
 #include "system.h"
 #include <stdio.h>
 
-#define ROOT_FILE   "rootFile"
-#define TEST_DIR    "testDir"
-#define INNER_FILE  "innerFile"
-#define CONTENTS    "HelloNachos"
+#define ROOT_FILE           "rootFile"
+#define TEST_DIR            "testDir"
+#define TEST_DIR_CHILD_DIR  "testDir/testDir1"
+#define INNER_FILE          "innerFile"
+#define CONTENTS            "HelloNachos"
 #define CONTENT_SIZE 12
 
 //----------------------------------------------------------------------
@@ -58,6 +59,13 @@ DirectoryTest()
     printf("\nCreating directory '%s' in root\n", TEST_DIR);
     if (!fileSystem->createDirectory(TEST_DIR)) {
         printf("Failed to create directory %s\n", TEST_DIR);
+        return;
+    }
+
+    // Create a child directory for the newly created testDir
+    printf("\nCreating one child directory '%s'\n", TEST_DIR_CHILD_DIR);
+    if (!fileSystem->createDirectory(TEST_DIR_CHILD_DIR)) {
+        printf("Failed to create directory %s\n", TEST_DIR_CHILD_DIR);
         return;
     }
 

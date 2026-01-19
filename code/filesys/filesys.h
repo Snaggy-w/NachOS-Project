@@ -38,6 +38,11 @@
 #include "copyright.h"
 #include "openfile.h"
 #include "directory.h"
+#include "list.h"
+
+typedef LIST_H::List List_t;
+
+#define PATH_DELIM '/'
 
 #ifdef FILESYS_STUB 		// Temporarily implement file system calls as 
 				// calls to UNIX, until the real file system
@@ -74,6 +79,7 @@ class OpenFileListEntry {
 		int refCount;
 };
 
+
 class FileSystem {
   public:
     FileSystem(bool format);		// Initialize the file system.
@@ -108,10 +114,13 @@ class FileSystem {
 	//static bool isExistDirectory(Directory* dir);
    	OpenFile* freeMapFile;		// Bit map of free disk blocks,
 					// represented as a file
-   	OpenFile* directoryFile;		// "Root" directory -- list of 
-					// file names, represented as a file
-};
+   	OpenFile* directoryFile;		// current directory open file
 
+	List_t* parsePath(char* path);	//path parser returning a list of directory and file names
+
+	Directory* resolvePath(const char* path, char* lastName); // get directory based on the path to it
+
+};
 #endif // FILESYS
 
 #endif // FS_H

@@ -63,6 +63,7 @@ extern Semaphore *SemExitedProcesses;
 extern FileSystem *fileSystem;
 extern Directory *currentDirectory;
 extern SynchList *openFileList;
+extern Directory *rootDirectory;
 #endif
 
 #ifdef FILESYS

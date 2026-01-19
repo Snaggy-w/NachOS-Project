@@ -50,6 +50,7 @@
 #include "filehdr.h"
 #include "filesys.h"
 #include "system.h"
+#include <cstdlib>
 
 // Sectors containing the file headers for the bitmap of free sectors,
 // and the directory of files.  These file headers are placed in well-known 
@@ -145,10 +146,9 @@ FileSystem::FileSystem(bool format)
     // if we are not formatting the disk, just open the files representing
     // the bitmap and directory; these are left open while Nachos is running
         freeMapFile = new OpenFile(FreeMapSector);
-        directoryFile = new OpenFile(DirectorySector);
+        directoryFile = new OpenFile(DirectorySector); // for now the current directory open file is pointing to the root directory
     }
     // currentDirectory is initialized in system.h and system.cc
-    // prevDirectory = nullptr;
 }
 
 //----------------------------------------------------------------------
@@ -382,73 +382,172 @@ FileSystem::Print()
 
 Directory* FileSystem::createRootDirectory(){
     Directory* dir = new Directory(NumDirEntries);
+
+    // for now directoryFile is basically the rootDirectoryFile (does not exist explicitly in the system)
     ASSERT(directoryFile != NULL);
     dir->FetchFrom(directoryFile);
     dir->sector = DirectorySector;
+
+    // "."
+    dir->table[0].inUse = TRUE;
+    dir->table[0].isDirectory = TRUE;
+    strcpy(dir->table[0].name, ".");
+    dir->table[0].sector = dir->sector;
+
+    dir->WriteBack(directoryFile);
+
     return dir;
 }
 
-  bool FileSystem::createDirectory(const char* name) { //wrapper function so that we don't modify the generic class directory.cc
+//   bool FileSystem::createDirectory(const char* name) { //wrapper function so that we don't modify the generic class directory.cc
 
-    Directory *directory;
-    BitMap *freeMap;
-    FileHeader *hdr;
-    int sector;
-    bool success;
+//     Directory *directory;
+//     BitMap *freeMap;
+//     FileHeader *hdr;
+//     int sector;
+//     bool success;
+
+//     Directory* newDir = new Directory(NumDirEntries);
+
+//     directory = currentDirectory; //we track in which dir we are
+//     freeMap = new BitMap(NumSectors);
+//     freeMap->FetchFrom(freeMapFile);
+
+
+//     if (directory->Find(name) != -1)
+//       success = FALSE;			// file is already in directory
+//     else {	
+//         sector = freeMap->Find();	// find a sector to hold the file header
+//     	if (sector == -1) 		
+//             success = FALSE;		// no free block for file header 
+//         else if (!directory->Add(name, sector))
+//             success = FALSE;	// no space in directory
+//         else {
+
+//             newDir->sector = sector;
+
+//             newDir->table[0].inUse = TRUE;
+//             newDir->table[0].isDirectory = TRUE;
+//             strcpy(newDir->table[0].name, ".");
+//             newDir->table[0].sector = newDir->sector;
+
+//             newDir->table[1].inUse = TRUE;
+//             newDir->table[1].isDirectory = TRUE;
+//             strcpy(newDir->table[1].name, "..");
+//             newDir->table[1].sector = directory->sector; //just a convention
+
+//             DEBUG('f', "First dir entry %s\n", newDir->table[0].name);
+//             DEBUG('f', "Second dir entry %s\n", newDir->table[1].name);
+//             DEBUG('f', "Creating directory %s, size %d\n", name, NumDirEntries);
+
+//             hdr = new FileHeader;
+//             if (!hdr->Allocate(freeMap, newDir->tableSize * sizeof(DirectoryEntry)))
+//                     success = FALSE;	// no space on disk for data
+//             else {	
+//                 success = TRUE;
+//             // everything worked, flush all changes back to disk
+//                     hdr->WriteBack(sector); 		
+//                     directory->WriteBack(directoryFile);    // flush to disk
+//                     freeMap->WriteBack(freeMapFile);
+//                     OpenFile* newDirFile = new OpenFile(newDir->sector);
+//                     newDir->WriteBack(newDirFile);
+//                     delete newDirFile;
+//             }
+//                 delete hdr;
+//         }
+//         delete freeMap;
+//     }
+//     return success;
+// }
+
+bool FileSystem::createDirectory(const char* path)
+{
+    DEBUG('f', "Starting to create directory %s\n", path);
+
+    char dirName[FileNameMaxLen];
+    Directory* parentDir = resolvePath(path, dirName);
+    if (parentDir == nullptr)
+        return FALSE;
+
+    parentDir->List();
+    DEBUG('f', "Parent directory, sector %d\n", parentDir->sector);
+
+    BitMap* freeMap = new BitMap(NumSectors);
+    freeMap->FetchFrom(freeMapFile);
+
+    if (parentDir->Find(dirName) != -1) {
+        delete freeMap;
+        return FALSE;
+    }
+
+    int sector = freeMap->Find();
+    if (sector == -1) {
+        delete freeMap;
+        return FALSE;
+    }
+
+
 
     Directory* newDir = new Directory(NumDirEntries);
 
-    directory = currentDirectory; //we track in which dir we are
-    freeMap = new BitMap(NumSectors);
-    freeMap->FetchFrom(freeMapFile);
+    newDir->sector = sector;
+
+    // "."
+    newDir->table[0].inUse = TRUE;
+    newDir->table[0].isDirectory = TRUE;
+    strcpy(newDir->table[0].name, ".");
+    newDir->table[0].sector = sector;
+
+    // ".."
+    newDir->table[1].inUse = TRUE;
+    newDir->table[1].isDirectory = TRUE;
+    strcpy(newDir->table[1].name, "..");
+    newDir->table[1].sector = parentDir->sector;
+
+    DEBUG('f', "First dir entry %s\n", newDir->table[0].name);
+    DEBUG('f', "Second dir entry %s\n", newDir->table[1].name);
+    DEBUG('f', "Creating directory %s, size %d\n", dirName, NumDirEntries);
+
+    FileHeader* hdr = new FileHeader;
+    DEBUG('f', "Creating directory %s, size %d\n", dirName, NumDirEntries);
+;
+    bool success = hdr->Allocate(
+        freeMap,
+        DirectoryFileSize);
 
 
-    if (directory->Find(name) != -1)
-      success = FALSE;			// file is already in directory
-    else {	
-        sector = freeMap->Find();	// find a sector to hold the file header
-    	if (sector == -1) 		
-            success = FALSE;		// no free block for file header 
-        else if (!directory->Add(name, sector))
-            success = FALSE;	// no space in directory
-        else {
-
-            newDir->sector = sector;
-
-            newDir->table[0].inUse = TRUE;
-            newDir->table[0].isDirectory = TRUE;
-            strcpy(newDir->table[0].name, ".");
-            newDir->table[0].sector = newDir->sector;
-
-            newDir->table[1].inUse = TRUE;
-            newDir->table[1].isDirectory = TRUE;
-            strcpy(newDir->table[1].name, "..");
-            newDir->table[1].sector = directory->sector; //just a convention
-
-            DEBUG('f', "First dir entry %s\n", newDir->table[0].name);
-            DEBUG('f', "Second dir entry %s\n", newDir->table[1].name);
-            DEBUG('f', "Creating directory %s, size %d\n", name, NumDirEntries);
-
-            hdr = new FileHeader;
-            if (!hdr->Allocate(freeMap, newDir->tableSize * sizeof(DirectoryEntry)))
-                    success = FALSE;	// no space on disk for data
-            else {	
-                success = TRUE;
-            // everything worked, flush all changes back to disk
-                    hdr->WriteBack(sector); 		
-                    directory->WriteBack(directoryFile);    // flush to disk
-                    freeMap->WriteBack(freeMapFile);
-                    OpenFile* newDirFile = new OpenFile(newDir->sector);
-                    newDir->WriteBack(newDirFile);
-                    delete newDirFile;
-            }
-                delete hdr;
-        }
+    if (!success || !(parentDir->Add(dirName, sector))) {
+        delete hdr;
         delete freeMap;
+        delete newDir;
+        return FALSE;
     }
-    return success;
+
+    hdr->WriteBack(sector);
+    DEBUG('f', "Creating directory %s, size %d\n", dirName, NumDirEntries);
+
+
+    OpenFile* parentDirFile = new OpenFile(parentDir->sector);
+    DEBUG('f', "Parent directory file fetched: %s, firstEntry %s\n", parentDir->table->name);
+
+    parentDir->WriteBack(parentDirFile);
+    freeMap->WriteBack(freeMapFile);
+
+    OpenFile* newDirFile = new OpenFile(sector);
+    newDir->WriteBack(newDirFile);
+
+    delete parentDirFile;
+    delete newDirFile;
+    delete hdr;
+    delete freeMap;
+    delete newDir;
+
+    if (parentDir->sector == currentDirectory->sector) {
+        currentDirectory->FetchFrom(directoryFile);
 }
 
+    return TRUE;
+}
 
 
 bool FileSystem::changeDirectory(const char* name) {
@@ -511,3 +610,91 @@ bool FileSystem::deleteDirectory(const char* dirName) {
 
     return TRUE;
 }
+
+List_t* FileSystem::parsePath(char* path) {
+    if (path == nullptr) {
+        return new List_t();
+    }
+
+    List_t* result = new List_t();
+
+    char* start = path;
+    char* curr  = path;
+
+    while (*curr != '\0') {
+        if (*curr == PATH_DELIM) {
+            if (curr > start) {
+                size_t len = curr - start;
+                char* token = new char[len + 1];
+                strncpy(token, start, len);
+                token[len] = '\0';
+
+                result->Append((void*)token);
+            }
+            start = curr + 1;
+        }
+        curr++;
+    }
+
+    // hndle last component
+    if (curr > start) {
+        size_t len = curr - start;
+        char* token = new char[len + 1];
+        strncpy(token, start, len);
+        token[len] = '\0';
+
+        result->Append((void*)token);
+    }
+
+    return result;
+}
+
+Directory* FileSystem::resolvePath(const char* path, char* lastName)
+{
+    List_t* parts = parsePath((char*)path);
+    if (parts->IsEmpty()) return nullptr;
+
+    Directory* currDir = new Directory(NumDirEntries);
+
+    // absolute path ( start from the root)
+    if (path[0] == PATH_DELIM) {
+        currDir = rootDirectory;
+    } 
+    // Relative path → start from currentDirectory
+    else {
+        currDir = currentDirectory;
+    }
+
+    int n = parts->Size();
+
+    // Traverse all BUT last component
+    for (int i = 0; i < n - 1; i++) {
+        char* name = (char*)parts->GetAt(i);
+        // Skip "."
+        if (strcmp(name, ".") == 0) {
+            continue;
+        }
+        int sector = currDir->Find(name);
+
+        DEBUG('f', "resolvePath: stepping into %s (sector %d)\n", name, sector);
+
+        if (sector == -1) {
+            //delete currDir;
+            return nullptr;
+        }
+
+        Directory* nextDir = new Directory(NumDirEntries);
+        OpenFile* f = new OpenFile(sector);
+        nextDir->FetchFrom(f);
+        nextDir->sector = sector;
+
+        //delete f;
+        //delete currDir;
+        currDir = nextDir;
+    }
+
+    strcpy(lastName, (char*)parts->GetAt(n - 1));
+    return currDir;  
+}
+
+
