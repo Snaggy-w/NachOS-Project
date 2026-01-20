@@ -2,7 +2,8 @@
 #include "libstr.h"
 
 
-//NOTE : Security checks are not mad yet, we are trusting the user..
+//NOTE : Security checks are not made yet, we are trusting the user!
+
 int main() {
     char prompt[] = "$ ";
     char buffer[256];
@@ -42,7 +43,7 @@ int main() {
         if(str_cmp(arg1,"exit") == 0)
             break;
         
-        if(str_cmp(arg1,"$?") == 0)
+        if(str_cmp(arg1,"$?") == 0) //same logic as in UNIX
             PutInt(RET_VAL);
         
         if (arg2[0] == '&') {
@@ -52,7 +53,7 @@ int main() {
 	        }
         } 
         else if(str_cmp(arg1,"touch") == 0) { 
-            Create(arg2, atoi(arg3));
+           RET_VAL = Create(arg2, atoi(arg3));
         }
         else if(str_cmp(arg1,"rm") == 0) {
             RET_VAL = Remove(arg2);

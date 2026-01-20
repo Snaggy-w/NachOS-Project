@@ -279,7 +279,8 @@ void ExceptionHandler(ExceptionType which) {
 				break;
 			}
 
-			fileSystem->Create(filename, size);
+			bool res = fileSystem->Create(filename, size);
+			machine->WriteRegister(2, res ? (int)TRUE : (int)FALSE);
 			break;
 		}
 		case SC_Read: {
