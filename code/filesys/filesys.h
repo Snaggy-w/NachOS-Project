@@ -90,14 +90,13 @@ class FileSystem {
     					// and the bitmap of free blocks.
 	int ReturnFileFd(OpenFile* file);
 
-    bool Create(const char *name, int initialSize);  	
-					// Create a file (UNIX creat)
+    bool Create(const char *path, int initialSize);  // Create a file (UNIX creat)
 
-    OpenFile* Open(const char *name); 	// Open a file (UNIX open)
+    OpenFile* Open(const char *path); 	// Open a file (UNIX open)
 
-	void Close(const char* name); // Close an open file residing in openFileList
+	void Close(const char* path); // Close an open file residing in openFileList
 
-    bool Remove(const char *name); 	// Delete a file (UNIX unlink)
+    bool Remove(const char *path); 	// Delete a file (UNIX unlink)
 
     void List();			// List all the files in the file system
 
@@ -105,11 +104,11 @@ class FileSystem {
 
 	Directory* createRootDirectory();
 
-	bool createDirectory(const char* name);
+	bool createDirectory(const char* path);
 
-	bool changeDirectory(const char* name);
+	bool changeDirectory(const char* path);
 
-	bool deleteDirectory(const char* dirName);
+	bool deleteDirectory(const char* path);
 
   private:
 	//static bool isExistDirectory(Directory* dir);

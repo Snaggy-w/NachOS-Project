@@ -193,45 +193,46 @@ FileSystem::FileSystem(bool format)
 //----------------------------------------------------------------------
 
 bool
-FileSystem::Create(const char *name, int initialSize)
+FileSystem::Create(const char *path, int initialSize)
 {
-    Directory *directory;
-    BitMap *freeMap;
-    FileHeader *hdr;
-    int sector;
-    bool success;
+    char fileName[FileNameMaxLen];
+    Directory* parentDir = resolvePath(path, fileName);
+    if (parentDir == nullptr)
+        return FALSE;
 
-    DEBUG('f', "Creating file %s, size %d\n", name, initialSize);
+    DEBUG('f', "Creating file %s of size %d in directory at sector %d\n", fileName, initialSize, parentDir->sector);
 
-    directory = currentDirectory; //we track in which dir we are
-    DEBUG('f', "Directory from sector %d\n", directory->sector);
+    if (parentDir->Find(fileName) != -1) {
+      return FALSE;			// file is already in directory
+    }	
 
-    if (directory->Find(name) != -1)
-      success = FALSE;			// file is already in directory
-    else {	
-        freeMap = new BitMap(NumSectors);
-        freeMap->FetchFrom(freeMapFile);
-        sector = freeMap->Find();	// find a sector to hold the file header
-    	if (sector == -1) 		
-            success = FALSE;		// no free block for file header 
-        else if (!directory->Add(name, sector))
-            success = FALSE;	// no space in directory
-        else {
-                hdr = new FileHeader;
-            if (!hdr->Allocate(freeMap, initialSize))
-                    success = FALSE;	// no space on disk for data
-            else {	
-                success = TRUE;
-            // everything worked, flush all changes back to disk
-                    hdr->WriteBack(sector); 		
-                    directory->WriteBack(directoryFile);   
-                    freeMap->WriteBack(freeMapFile);
-            }
-                delete hdr;
-        }
+    BitMap *freeMap = new BitMap(NumSectors);
+    freeMap->FetchFrom(freeMapFile);
+    int sector = freeMap->Find();	// find a sector to hold the file header
+    if (sector == -1) 	{	
         delete freeMap;
+        return FALSE;		// no free block for file header 
+    }    
+
+    if (!parentDir->Add(fileName, sector)) {
+        delete freeMap;
+        return FALSE;	// no space in directory
     }
-    return success;
+
+    FileHeader* hdr = new FileHeader;
+    if (!hdr->Allocate(freeMap, initialSize)) {
+        delete freeMap;
+        return FALSE;	// no space on disk for data
+    }
+    	
+    // everything worked, flush all changes back to disk
+    hdr->WriteBack(sector); 		
+    parentDir->WriteBack(directoryFile);   
+    freeMap->WriteBack(freeMapFile);
+
+    delete hdr;
+    delete freeMap;
+    return TRUE;
 }
 
 //----------------------------------------------------------------------
@@ -244,12 +245,18 @@ FileSystem::Create(const char *name, int initialSize)
 //	"name" -- the text name of the file to be opened
 //----------------------------------------------------------------------
 OpenFile *
-FileSystem::Open(const char *name)
+FileSystem::Open(const char *path)
 { 
-    DEBUG('f', "Directory from sector %d\n", currentDirectory->sector);
-    DEBUG('f', "Opening file %s\n", name);
+    char fileName[FileNameMaxLen];
+    Directory* parentDir = resolvePath(path, fileName);
+    if (parentDir == nullptr) {
+        return NULL;
+    }
 
-    int sector = currentDirectory->Find(name);
+    DEBUG('f', "Directory from sector %d\n", parentDir->sector);
+    DEBUG('f', "Opening file %s\n", fileName);
+
+    int sector = parentDir->Find(fileName);
     DEBUG('f', "File header sector is %d\n", sector);
     if (sector < 0)
         return NULL;
@@ -257,7 +264,6 @@ FileSystem::Open(const char *name)
     int fileIndex = openFileList->FindIf(MatchSector, &sector);
     
     DEBUG('f', "file index in openFileList is %d\n", fileIndex);
-
 
     if (fileIndex != -1) {
         OpenFileListEntry* entry = (OpenFileListEntry*) openFileList->GetAt(fileIndex);
@@ -278,8 +284,13 @@ FileSystem::Open(const char *name)
     return openFile;
 }
 
-void FileSystem::Close(const char* name) {
-    int sector = currentDirectory->Find(name);
+void FileSystem::Close(const char* path) {
+    char fileName[FileNameMaxLen];
+    Directory* parentDir = resolvePath(path, fileName);
+    if (parentDir == nullptr) {
+        return;
+    }
+    int sector = parentDir->Find(fileName);
     ASSERT(sector >= 0);
 
     int fileIndex = openFileList->FindIf(MatchSector, &sector);
@@ -290,7 +301,7 @@ void FileSystem::Close(const char* name) {
     ASSERT(entry->refCount > 0);
     entry->refCount--;
 
-    DEBUG('f', "The entry->refCount of the file %s is %d\n", name, entry->refCount);
+    DEBUG('f', "The entry->refCount of the file %s is %d\n", fileName, entry->refCount);
     if (entry->refCount == 0) {
         entry = (OpenFileListEntry*) openFileList->RemoveAt(fileIndex);
         delete entry->file;
@@ -313,15 +324,22 @@ void FileSystem::Close(const char* name) {
 //----------------------------------------------------------------------
 
 bool
-FileSystem::Remove(const char *name)
+FileSystem::Remove(const char *path)
+
 { 
-    Directory *directory;
+    char fileName[FileNameMaxLen];
+    Directory* parentDir = resolvePath(path, fileName);
+    if (parentDir == nullptr)
+        return FALSE;
+
+    DEBUG('f', "Removing file %s from its parent directory at sector %d\n", fileName, parentDir->sector);
+
+    //Directory *directory;
     BitMap *freeMap;
     FileHeader *fileHdr;
     int sector;
     
-    directory = currentDirectory;
-    sector = directory->Find(name);
+    sector = parentDir->Find(fileName);
     if (sector == -1) {
        return FALSE;			 // file not found 
     }
@@ -337,10 +355,10 @@ FileSystem::Remove(const char *name)
 
     fileHdr->Deallocate(freeMap);  		// remove data blocks
     freeMap->Clear(sector);			// remove header block
-    directory->Remove(name);
+    parentDir->Remove(fileName);
 
     freeMap->WriteBack(freeMapFile);		// flush to disk
-    directory->WriteBack(directoryFile);   
+    parentDir->WriteBack(directoryFile);   
     delete fileHdr;
     delete freeMap;
     return TRUE;
@@ -425,7 +443,6 @@ bool FileSystem::createDirectory(const char* path)
     if (parentDir == nullptr)
         return FALSE;
 
-    parentDir->List();
     DEBUG('f', "Parent directory, sector %d\n", parentDir->sector);
 
     BitMap* freeMap = new BitMap(NumSectors);
@@ -492,8 +509,8 @@ bool FileSystem::createDirectory(const char* path)
     if (parentDir->sector == currentDirectory->sector) {
         currentDirectory->FetchFrom(directoryFile);
 }
-    DEBUG('f', "After directory creation:\n");
-    parentDir->List();
+    DEBUG('f', "Current directory sector %d\n", currentDirectory->sector);
+
 
     return TRUE;
 }
@@ -518,17 +535,32 @@ bool FileSystem::changeDirectory(const char* path) {
     DEBUG('f', "First dir entry in currentDir is %s\n", currentDirectory->table[0].name);
     DEBUG('f', "Second dir entry in currentDir is %s\n", currentDirectory->table[1].name);
 
+    DEBUG('f', "Current directory sector %d\n", currentDirectory->sector);
+
     return TRUE;
 }
 
 bool FileSystem::deleteDirectory(const char* path) {
+    DEBUG('f', "Starting to delete directory %s\n", path);
+
     char dirName[FileNameMaxLen];
     int dirSector = getDirectorySector(path, dirName);
-    if (dirSector == -1)
+    Directory* parentDir = resolvePath(path, dirName);
+    if (parentDir == nullptr) {
         return FALSE;
+    }
+    if (dirSector == -1) {
+        DEBUG('f', "Directory not found\n");
+        return FALSE;
+    }
+    DEBUG('f', "Parent directory, sector %d\n", parentDir->sector);
+    DEBUG('f', "Current directory sector %d\n", currentDirectory->sector);
+
 
     Directory* dir = new Directory(NumDirEntries);
     OpenFile* dirFile = new OpenFile(dirSector);
+
+    OpenFile* parentDirFile = new OpenFile(parentDir->sector);
 
     dir->FetchFrom(dirFile);
 
@@ -536,6 +568,7 @@ bool FileSystem::deleteDirectory(const char* path) {
         if (dir->table[k].inUse == TRUE) {
             delete dirFile;
             delete dir;
+            DEBUG('f', "Directory is not empty, cannot delete it\n");
             return FALSE;
         }
     }
@@ -548,16 +581,24 @@ bool FileSystem::deleteDirectory(const char* path) {
 
     fileHdr->Deallocate(freeMap);
     freeMap->Clear(dirSector);
-    currentDirectory->Remove(dirName);
+    
+    parentDir->Remove(dirName);
 
     freeMap->WriteBack(freeMapFile);
 
-    currentDirectory->WriteBack(directoryFile);
+    parentDir->WriteBack(parentDirFile);
 
     delete freeMap;
     delete fileHdr;
     delete dirFile;
     delete dir;
+
+    DEBUG('f', "Current directory sector %d\n", currentDirectory->sector);
+
+
+    if (parentDir->sector == currentDirectory->sector) {
+        currentDirectory->FetchFrom(directoryFile);
+    }
 
     return TRUE;
 }

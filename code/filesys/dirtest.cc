@@ -114,7 +114,7 @@ DirectoryTest()
     fileSystem->List();
 
 
-        // ------------------------------------------------------------
+    // ------------------------------------------------------------
     // Remove file inside TEST_DIR
     // ------------------------------------------------------------
     printf("\nRemoving file '%s' inside '%s'\n", INNER_FILE, TEST_DIR);
@@ -135,6 +135,21 @@ DirectoryTest()
         printf("Failed to return to root directory\n");
         return;
     }
+
+    // ------------------------------------------------------------
+    // Remove a child directory inside TEST_DIR
+    // 
+    printf("\n Deleting a child directory of %s\n", TEST_DIR);
+    if (!fileSystem->deleteDirectory(TEST_DIR_CHILD_DIR)) {
+        printf("Failed to delete directory\n");
+        return;
+    }
+
+    // ------------------------------------------------------------
+    // After deleting a child directory
+    // ------------------------------------------------------------
+    printf("\nListing root directory after deleting '%s':\n", TEST_DIR_CHILD_DIR);
+    fileSystem->List();
 
     // ------------------------------------------------------------
     // Delete TEST_DIR
