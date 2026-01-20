@@ -226,12 +226,15 @@ FileSystem::Create(const char *path, int initialSize)
     }
     	
     // everything worked, flush all changes back to disk
-    hdr->WriteBack(sector); 		
-    parentDir->WriteBack(directoryFile);   
+    hdr->WriteBack(sector); 	
+    OpenFile* parentDirFile = new OpenFile(parentDir->sector);
+    parentDir->WriteBack(parentDirFile);   
     freeMap->WriteBack(freeMapFile);
 
     delete hdr;
     delete freeMap;
+    delete parentDirFile;
+
     return TRUE;
 }
 
@@ -325,7 +328,6 @@ void FileSystem::Close(const char* path) {
 
 bool
 FileSystem::Remove(const char *path)
-
 { 
     char fileName[FileNameMaxLen];
     Directory* parentDir = resolvePath(path, fileName);
@@ -358,9 +360,13 @@ FileSystem::Remove(const char *path)
     parentDir->Remove(fileName);
 
     freeMap->WriteBack(freeMapFile);		// flush to disk
-    parentDir->WriteBack(directoryFile);   
+
+    OpenFile* parentDirFile = new OpenFile(parentDir->sector);
+    parentDir->WriteBack(parentDirFile);   
     delete fileHdr;
     delete freeMap;
+    delete parentDirFile;
+
     return TRUE;
 } 
 
@@ -407,7 +413,6 @@ FileSystem::Print()
 
     directory->FetchFrom(directoryFile);
     directory->Print();
-
 
     delete bitHdr;
     delete dirHdr;
@@ -482,7 +487,6 @@ bool FileSystem::createDirectory(const char* path)
         freeMap,
         DirectoryFileSize);
 
-
     if (!success || !(parentDir->Add(dirName, sector, true))) {
         delete hdr;
         delete freeMap;
@@ -508,9 +512,7 @@ bool FileSystem::createDirectory(const char* path)
 
     if (parentDir->sector == currentDirectory->sector) {
         currentDirectory->FetchFrom(directoryFile);
-}
-    DEBUG('f', "Current directory sector %d\n", currentDirectory->sector);
-
+    }
 
     return TRUE;
 }
@@ -522,6 +524,7 @@ bool FileSystem::changeDirectory(const char* path) {
     if (dirSector == -1)
         return FALSE;
     Directory* dir = new Directory(NumDirEntries);
+    dir->sector = dirSector;
 
     currentDirectory->WriteBack(directoryFile); 
     
@@ -531,11 +534,6 @@ bool FileSystem::changeDirectory(const char* path) {
     dir->FetchFrom(directoryFile);
 
     currentDirectory = dir;
-
-    DEBUG('f', "First dir entry in currentDir is %s\n", currentDirectory->table[0].name);
-    DEBUG('f', "Second dir entry in currentDir is %s\n", currentDirectory->table[1].name);
-
-    DEBUG('f', "Current directory sector %d\n", currentDirectory->sector);
 
     return TRUE;
 }
@@ -554,8 +552,6 @@ bool FileSystem::deleteDirectory(const char* path) {
         return FALSE;
     }
     DEBUG('f', "Parent directory, sector %d\n", parentDir->sector);
-    DEBUG('f', "Current directory sector %d\n", currentDirectory->sector);
-
 
     Directory* dir = new Directory(NumDirEntries);
     OpenFile* dirFile = new OpenFile(dirSector);
@@ -592,9 +588,6 @@ bool FileSystem::deleteDirectory(const char* path) {
     delete fileHdr;
     delete dirFile;
     delete dir;
-
-    DEBUG('f', "Current directory sector %d\n", currentDirectory->sector);
-
 
     if (parentDir->sector == currentDirectory->sector) {
         currentDirectory->FetchFrom(directoryFile);

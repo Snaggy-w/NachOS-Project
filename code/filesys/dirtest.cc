@@ -145,11 +145,28 @@ DirectoryTest()
         return;
     }
 
+    // Change into testDir
+    printf("\nChanging into directory '%s'\n", TEST_DIR);
+    if (!fileSystem->changeDirectory(TEST_DIR)) {
+        printf("Failed to change directory to %s\n", TEST_DIR);
+        return;
+    }
+
     // ------------------------------------------------------------
     // After deleting a child directory
     // ------------------------------------------------------------
-    printf("\nListing root directory after deleting '%s':\n", TEST_DIR_CHILD_DIR);
+    printf("\nListing testDir directory after deleting '%s':\n", TEST_DIR_CHILD_DIR);
     fileSystem->List();
+
+    // ------------------------------------------------------------
+    // Change back to root directory
+    // ------------------------------------------------------------
+    printf("\nChanging back to root directory\n");
+    if (!fileSystem->changeDirectory("..")) {
+        printf("Failed to return to root directory\n");
+        return;
+    }
+
 
     // ------------------------------------------------------------
     // Delete TEST_DIR
