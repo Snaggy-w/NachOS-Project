@@ -185,8 +185,8 @@ void Initialize(int argc, char **argv) {
 
 #ifdef FILESYS_NEEDED
     fileSystem = new FileSystem(format);
-    currentDirectory = fileSystem->createRootDirectory();
     openFileList = new SynchList();
+    currentDirectory = fileSystem->createRootDirectory();
     rootDirectory = fileSystem->createRootDirectory();
     currentDirectory = rootDirectory;
 

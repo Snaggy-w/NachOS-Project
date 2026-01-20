@@ -264,16 +264,6 @@ FileSystem::Open(const char *path)
     if (sector < 0)
         return NULL;
 
-    int fileIndex = openFileList->FindIf(MatchSector, &sector);
-    
-    DEBUG('f', "file index in openFileList is %d\n", fileIndex);
-
-    if (fileIndex != -1) {
-        OpenFileListEntry* entry = (OpenFileListEntry*) openFileList->GetAt(fileIndex);
-        entry->refCount++;
-        return entry->file;
-    }
-
     if (openFileList->Size() >= MAX_OPEN_FILES)
         return NULL;
 
@@ -281,7 +271,7 @@ FileSystem::Open(const char *path)
     OpenFileListEntry* newEntry = new OpenFileListEntry;
     newEntry->file = openFile;
     newEntry->sector = sector;
-    newEntry->refCount = 1;
+    DEBUG('f', "OpenFile pointer = %p\n", (void*)newEntry->file);
 
     openFileList->Append(newEntry);
     return openFile;
@@ -299,17 +289,9 @@ void FileSystem::Close(const char* path) {
     int fileIndex = openFileList->FindIf(MatchSector, &sector);
     ASSERT(fileIndex != -1);
 
-    OpenFileListEntry* entry = (OpenFileListEntry*) openFileList->GetAt(fileIndex);
-
-    ASSERT(entry->refCount > 0);
-    entry->refCount--;
-
-    DEBUG('f', "The entry->refCount of the file %s is %d\n", fileName, entry->refCount);
-    if (entry->refCount == 0) {
-        entry = (OpenFileListEntry*) openFileList->RemoveAt(fileIndex);
-        delete entry->file;
-        delete entry;
-    }
+    OpenFileListEntry* entry = (OpenFileListEntry*) openFileList->RemoveAt(fileIndex);
+    delete entry->file;
+    delete entry;
 }
 
 //----------------------------------------------------------------------

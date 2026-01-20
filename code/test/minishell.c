@@ -40,13 +40,16 @@ int main() {
         if (arg1[0] == '\0')
             continue; // empty command
 
-        if(str_cmp(arg1,"exit") == 0)
+        else if(str_cmp(arg1,"exit") == 0)
             break;
         
-        if(str_cmp(arg1,"$?") == 0) //same logic as in UNIX
+        else if(str_cmp(arg1,"$?") == 0) {
+            //same logic as in UNIX
             PutInt(RET_VAL);
+            PutChar('\n');
+        } 
         
-        if (arg2[0] == '&') {
+        else if (arg2[0] == '&') {
             while(ForkExec(arg1) == -1){
 		        PutString("Out of memory");	
                 ProcessJoin(-1);
@@ -100,33 +103,30 @@ int main() {
         }
         else if (str_cmp(arg1, "help") == 0) {
             PutString(
-                "Available commands:\n\n"
-                "exit\n"
-                "    Exit the shell\n\n"
                 "$?\n"
-                "    Print return value of last command\n\n"
+                "Print return value of last command\n"
                 "touch <name> <size>\n"
-                "    Create a file with given size in bytes\n\n"
+                "Create a file with given size in bytes\n"
                 "rm <name>\n"
-                "    Remove a file\n\n"
+                "Remove a file\n"
                 "o <name>\n"
-                "    Open a file, returns file descriptor\n\n"
+                "Open a file, returns file descriptor\n"
                 "w <buffer> <size> <fd>\n"
-                "    Write <size> bytes from <buffer> to file <fd>\n\n"
+                "Write <size> bytes from <buffer> to file <fd>\n"
                 "r <size> <fd>\n"
-                "    Read <size> bytes from file <fd> and print to console\n\n"
+                "Read <size> bytes from file <fd> and print to console\n"
                 "close <fd>\n"
-                "    Close an open file\n\n"
+                "Close an open file\n"
                 "l\n"
-                "    List current directory contents\n\n"
+                "List current directory contents\n"
                 "mkdir <name>\n"
-                "    Create a directory\n\n"
+                "Create a directory\n"
                 "cd <name>\n"
-                "    Change current directory\n\n"
+                "Change current directory\n"
                 "rmd <name>\n"
-                "    Remove a directory\n\n"
+                "Remove a directory\n"
                 "<program> &\n"
-                "    Run program in background\n"
+                "Run program in background\n"
             );
         }
         else {

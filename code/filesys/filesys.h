@@ -76,8 +76,7 @@ class OpenFileListEntry {
 	public:
 		OpenFile* file;
 		int sector; //the header sector of this file
-		int refCount;
-};
+	};
 
 
 class FileSystem {
