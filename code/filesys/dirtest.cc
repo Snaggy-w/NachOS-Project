@@ -13,29 +13,30 @@
 #define INNER_FILE          "innerFile"
 #define CONTENTS            "HelloNachos"
 #define CONTENT_SIZE 12
+/*
+----------------------------------------------------------------------
+CreateFile
+	Simple helper to create a file and write some content
+----------------------------------------------------------------------
+*/
 
-//----------------------------------------------------------------------
-// CreateFile
-//	Simple helper to create a file and write some content
-//----------------------------------------------------------------------
+static void
+CreateFile(const char* name)
+{
+    OpenFile* openFile;
 
-// static void
-// CreateFile(const char* name)
-// {
-//     OpenFile* openFile;
+    printf("Creating file: %s\n", name);
 
-//     printf("Creating file: %s\n", name);
+    if (!fileSystem->Create(name, CONTENT_SIZE)) {
+        printf("Failed to create file %s\n", name);
+        return;
+    }
 
-//     if (!fileSystem->Create(name, CONTENT_SIZE)) {
-//         printf("Failed to create file %s\n", name);
-//         return;
-//     }
-
-//     openFile = fileSystem->Open(name);
-//     if (openFile == NULL) {
-//         printf("Failed to open file %s\n", name);
-//         return;
-//     }
+    openFile = fileSystem->Open(name);
+    if (openFile == NULL) {
+        printf("Failed to open file %s\n", name);
+        return;
+    }
 
     openFile->Write(CONTENTS, CONTENT_SIZE);
     fileSystem->Close(name);
@@ -69,13 +70,13 @@ DirectoryTest()
         return;
     }
 
-    // Create a file in root directory
-    // CreateFile(ROOT_FILE);
-    // char buf[CONTENT_SIZE];
+    //Create a file in root directory
+    CreateFile(ROOT_FILE);
+    char buf[CONTENT_SIZE];
 
-    // OpenFile* file1 = fileSystem->Open(ROOT_FILE);
-    // file1->Read(buf, CONTENT_SIZE);
-    // printf("\nContent of file %s is %s\n", ROOT_FILE, buf);
+    OpenFile* file1 = fileSystem->Open(ROOT_FILE);
+    file1->Read(buf, CONTENT_SIZE);
+    printf("\nContent of file %s is %s\n", ROOT_FILE, buf);
     
     fileSystem->Close(ROOT_FILE);
     memset(buf, '\0', CONTENT_SIZE);
@@ -96,14 +97,14 @@ DirectoryTest()
     printf("\nListing contents of '%s':\n", TEST_DIR);
     fileSystem->List();
 
-    // Create a file inside testDir
-    // CreateFile(INNER_FILE);
+    //Create a file inside testDir
+    CreateFile(INNER_FILE);
 
-    // OpenFile* file2 = fileSystem->Open(INNER_FILE);
+    OpenFile* file2 = fileSystem->Open(INNER_FILE);
 
-    // file2->Read(buf, CONTENT_SIZE);
+    file2->Read(buf, CONTENT_SIZE);
     
-    // printf("\nContent of file %s is %s\n", INNER_FILE, buf);
+    printf("\nContent of file %s is %s\n", INNER_FILE, buf);
 
     fileSystem->Close(INNER_FILE);
     memset(buf, '\0', CONTENT_SIZE);
@@ -116,11 +117,11 @@ DirectoryTest()
         // ------------------------------------------------------------
     // Remove file inside TEST_DIR
     // ------------------------------------------------------------
-    // printf("\nRemoving file '%s' inside '%s'\n", INNER_FILE, TEST_DIR);
-    // if (!fileSystem->Remove(INNER_FILE)) {
-    //     printf("Failed to remove file %s\n", INNER_FILE);
-    //     return;
-    // }
+    printf("\nRemoving file '%s' inside '%s'\n", INNER_FILE, TEST_DIR);
+    if (!fileSystem->Remove(INNER_FILE)) {
+        printf("Failed to remove file %s\n", INNER_FILE);
+        return;
+    }
 
     // List TEST_DIR after removal
     printf("\nListing contents of '%s' after removing file:\n", TEST_DIR);
