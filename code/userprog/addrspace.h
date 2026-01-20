@@ -26,11 +26,16 @@
 #include "rnetmanager.h"
 #endif
 
-
+#ifdef FILESYS_STUB
+#include "opentable.h"
+#endif
 
 class AddrSpace {
   public:
 
+    #ifdef FILESYS_STUB
+    OpenTable* openTable;
+    #endif
     BitMap * userStackSegmentMap;
     int creation_status;
     AddrSpace(OpenFile *executable); // Create an address space,

@@ -30,6 +30,14 @@
 #include "addrspace.h"
 
 
+#ifndef ConsoleInput
+#define ConsoleInput 0
+#endif
+
+#ifndef ConsoleOutput
+#define ConsoleOutput 1
+#endif
+
 #ifdef NETWORK
 #include "rnetmanager.h"
 #endif
@@ -144,6 +152,156 @@ void ExceptionHandler(ExceptionType which) {
 			// We need to implement Close and and figure out arguments stuff
 		//break;
 
+		#ifdef FILESYS_STUB
+		case SC_Create: {
+		    char name[MAX_FILENAME_LEN];
+		    int userNameAddr = (int)machine->ReadRegister(4);
+
+		    if (!Helpers::CopyStringFromUser(userNameAddr, name, MAX_FILENAME_LEN)) {
+			machine->WriteRegister(2, -1);
+			break;
+		    }
+
+		    // In NachOS, Create takes initialSize; in stub it ignores it.
+		    bool ok = fileSystem->Create(name, 0);
+		    machine->WriteRegister(2, ok ? 0 : -1);
+		    break;
+		}
+
+		case SC_Open: {
+		    char name[MAX_FILENAME_LEN];
+		    int userNameAddr = (int)machine->ReadRegister(4);
+
+		    if (!Helpers::CopyStringFromUser(userNameAddr, name, MAX_FILENAME_LEN)) {
+			machine->WriteRegister(2, -1);
+			break;
+		    }
+
+		    if (!currentThread->space || !currentThread->space->openTable) {
+			machine->WriteRegister(2, -1);
+			break;
+		    }
+
+		    OpenFile* f = fileSystem->Open(name);
+		    if (!f) {
+			DEBUG('f',"failed on filesystem open");
+			machine->WriteRegister(2, -1);
+			break;
+		    }
+
+		    int fd = currentThread->space->openTable->Add(f);
+		    if (fd < 0) {
+			DEBUG('f',"failed on fd assignment thing");
+			delete f;
+			machine->WriteRegister(2, -1);
+			break;
+		    }
+
+		    machine->WriteRegister(2, fd);
+		    break;
+		}
+
+		case SC_Close: {
+		    int fd = (int)machine->ReadRegister(4);
+
+		    if (!currentThread->space || !currentThread->space->openTable) {
+			machine->WriteRegister(2, -1);
+			break;
+		    }
+
+		    int rc = currentThread->space->openTable->Remove(fd);
+		    machine->WriteRegister(2, rc);
+		    break;
+		}
+
+		case SC_Read: {
+		    int userBuf = (int)machine->ReadRegister(4);
+		    int size    = (int)machine->ReadRegister(5);
+		    int fd      = (int)machine->ReadRegister(6);
+
+		    if (size < 0) { machine->WriteRegister(2, -1); break; }
+		    if (size == 0) { machine->WriteRegister(2, 0); break; }
+
+		    // ConsoleInput
+		    if (fd == ConsoleInput) {
+			// Read one char at a time to user buffer
+			int count = 0;
+			for (; count < size; count++) {
+			    char ch = synchconsole->SynchGetChar();
+			    if (!machine->WriteMem(userBuf + count, 1, (int)ch)) break;
+			}
+			machine->WriteRegister(2, count);
+			break;
+		    }
+
+		    if (!currentThread->space || !currentThread->space->openTable) {
+			machine->WriteRegister(2, -1);
+			break;
+		    }
+
+		    OpenFile* f = currentThread->space->openTable->Get(fd);
+		    if (!f) { machine->WriteRegister(2, -1); break; }
+
+		    // Read into kernel buffer then copy to user
+		    char* kbuf = new char[size];
+		    int n = f->Read(kbuf, size);
+
+		    int copied = 0;
+		    for (int i = 0; i < n; i++) {
+			if (!machine->WriteMem(userBuf + i, 1, (int)kbuf[i])) break;
+			copied++;
+		    }
+
+		    delete [] kbuf;
+		    machine->WriteRegister(2, copied);
+		    break;
+		}
+
+		case SC_Write: {
+		    int userBuf = (int)machine->ReadRegister(4);
+		    int size    = (int)machine->ReadRegister(5);
+		    int fd      = (int)machine->ReadRegister(6);
+
+		    if (size < 0) { machine->WriteRegister(2, -1); break; }
+		    if (size == 0) { machine->WriteRegister(2, 0); break; }
+
+		    // ConsoleOutput
+		    if (fd == ConsoleOutput) {
+			// Write from user buffer to console
+			for (int i = 0; i < size; i++) {
+			    int v;
+			    if (!machine->ReadMem(userBuf + i, 1, &v)) break;
+			    synchconsole->SynchPutChar((char)v);
+			}
+			machine->WriteRegister(2, size);
+			break;
+		    }
+
+		    if (!currentThread->space || !currentThread->space->openTable) {
+			machine->WriteRegister(2, -1);
+			break;
+		    }
+
+		    OpenFile* f = currentThread->space->openTable->Get(fd);
+		    if (!f) { machine->WriteRegister(2, -1); break; }
+
+		    // Copy from user to kernel buffer then write
+		    char* kbuf = new char[size];
+		    int copied = 0;
+		    for (int i = 0; i < size; i++) {
+			int v;
+			if (!machine->ReadMem(userBuf + i, 1, &v)) break;
+			kbuf[i] = (char)v;
+			copied++;
+		    }
+
+		    int n = f->Write(kbuf, copied);
+		    delete [] kbuf;
+
+		    machine->WriteRegister(2, n);
+		    break;
+		}
+		#endif
 		case SC_Fork: {
 			VoidFunctionPtr fn_ptr = (VoidFunctionPtr)machine->ReadRegister(4);
 			Thread *t = new Thread("Forked Thread");

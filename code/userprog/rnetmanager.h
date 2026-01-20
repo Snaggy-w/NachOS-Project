@@ -39,27 +39,29 @@ public:
     // Begin blocks until a whole var message is available, stores it internally.
     // Read copies it out to user buffer.
     // End frees the stored message.
-    int RecvVarBegin(int h, int userOutLen, int userSrcM, int userSrcB); 
-    int RecvVarRead(int h, int userBuf, int cap);
-    int RecvVarEnd(int h);
+    // as an analogy:
+    int RecvVarBegin(int h, int userOutLen, int userSrcM, int userSrcB); // more like openning a file
+    int RecvVarRead(int h, int userBuf, int cap); // more like reading from the file
+    int RecvVarEnd(int h); // cleaning up and closing the file
 
 private:
     struct Handle {
-        bool used;
-        int localMailbox;
-        ReliablePost* rp;
+        bool used; // is this table slot occupied
+        int localMailbox; // which mailbox (port) is this handle tied to
+        ReliablePost* rp; // the reliable post object related to this handle
 
-        bool haveVar;
-        char* varData;
-        int varLen;
-        int varSrcM;
-        int varSrcB;
+        bool haveVar; // the kernel has a buffer of data that the user has not consumed yet. It enforces that the user call End so the kernel 
+		      // can safely free the memory
+        char* varData; // pointer to kernel buffer holding variable sized message
+        int varLen; // size of the var data buffer
+        int varSrcM; // the source machine of the data 
+        int varSrcB; // the source mailbox of the data
     };
 
     Lock* lock;
-    Handle table[MAX_RNET_HANDLES]; // Table of 
+    Handle table[MAX_RNET_HANDLES]; // Table of handles
 
-    bool Valid(int h) const;
+    bool Valid(int h) const; // helper function that cheks if the handle is valid in the handles table
 };
 
 #endif // NETWORK

@@ -81,3 +81,16 @@ int strlen(const char *s) {
     while (s && s[n]) n++;
     return n;
 }
+
+void rstrip_ws(char *s) {
+    int n = 0;
+    while (s[n] != 0) n++;
+    while (n > 0) {
+        char c = s[n - 1];
+        if (c == '\n' || c == '\r' || c == ' ' || c == '\t')
+            s[--n] = 0;
+        else
+            break;
+    }
+}
+

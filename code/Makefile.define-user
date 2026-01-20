@@ -95,4 +95,4 @@ USER_FLAVORS=step6
 #     synchconsole.cc userthread.cc))
 
 $(eval $(call define-flavor,step6,userprog filesys-stub network,\
-    synchconsole.cc userthread.cc frameprovider.cc helpers.cc userprocess.cc reliable.cc rnetmanager.cc))
+    synchconsole.cc userthread.cc frameprovider.cc helpers.cc userprocess.cc reliable.cc rnetmanager.cc opentable.cc))

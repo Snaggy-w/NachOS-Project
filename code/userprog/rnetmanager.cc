@@ -99,13 +99,14 @@ int RNetManager::Socket(int localMailbox) {
             return -1;
         }
     }
-
+    
+    // Find an available slot in the handles table
     int slot = -1;
     for (int i = 0; i < MAX_RNET_HANDLES; i++) {
         if (!table[i].used) { slot = i; break; }
     }
     if (slot < 0) { lock->Release(); return -1; }
-
+    // setup the table if found
     table[slot].used = true;
     table[slot].localMailbox = localMailbox;
     table[slot].haveVar = false;
@@ -118,6 +119,11 @@ int RNetManager::Socket(int localMailbox) {
     return slot;
 }
 
+
+/* RNetManager:
+ * 	Cleans the entry from the handles table
+ *
+ */
 int RNetManager::Close(int h) {
     lock->Acquire();
     if (!Valid(h)) { lock->Release(); return -1; }
@@ -139,6 +145,10 @@ int RNetManager::Close(int h) {
     return 0;
 }
 
+/* SendFixed:
+ *	Wrapper around ReliablePost::SendFixed that uses a socket descriptor and handles data transfer
+ *	from userspace to kernel space
+ */
 int RNetManager::SendFixed(int h, int dstM, int dstB, int userBuf, int len) {
     if (len < 0) return -1;
 
@@ -158,6 +168,12 @@ int RNetManager::SendFixed(int h, int dstM, int dstB, int userBuf, int len) {
     return ok ? 0 : -1;
 }
 
+
+/* RNetManager:
+ * 	Wrapper around ReliablePost::ReceiveFixed that received a packet of fixed sized data 
+ * 	and transfers the data to the user buffer
+ *
+ */
 int RNetManager::RecvFixed(int h, int userBuf, int cap, int userSrcM, int userSrcB) {
     if (cap < 0) return -1;
 
@@ -179,9 +195,12 @@ int RNetManager::RecvFixed(int h, int userBuf, int cap, int userSrcM, int userSr
     if (!WriteIntToUser(userSrcM, srcM)) return -1;
     if (!WriteIntToUser(userSrcB, srcB)) return -1;
 
-    return n; // bytes copied
+    return n; // return the number of bytes copied to the user buffer
 }
 
+/* SendVar:
+ *	Wrapper around ReliablePost::SendVar that sends data from userspace as chunked data
+ */
 int RNetManager::SendVar(int h, int dstM, int dstB, int userBuf, int len) {
     if (len < 0) return -1;
 
@@ -201,10 +220,15 @@ int RNetManager::SendVar(int h, int dstM, int dstB, int userBuf, int len) {
     return ok ? 0 : -1;
 }
 
+/* RecvVarBegin:
+ *	Wrapper around ReliablePost::ReceiveVar, receives data from network to kernel buffer
+ *	and returns metadata to user space (length, src machine, src box)
+ */
+
 int RNetManager::RecvVarBegin(int h, int userOutLen, int userSrcM, int userSrcB) {
     lock->Acquire();
     if (!Valid(h)) { lock->Release(); return -1; }
-    if (table[h].haveVar) { lock->Release(); return -1; } // must End first
+    if (table[h].haveVar) { lock->Release(); return -1; } // must End first so we don't corrupt the bufefr or have a race condition or have a memory leak
     ReliablePost* rp = table[h].rp;
     lock->Release();
 
@@ -212,7 +236,7 @@ int RNetManager::RecvVarBegin(int h, int userOutLen, int userSrcM, int userSrcB)
     int len = 0;
     int srcM = 0, srcB = 0;
 
-    rp->ReceiveVar(&data, &len, &srcM, &srcB); // blocks
+    rp->ReceiveVar(&data, &len, &srcM, &srcB); // blocks on receive
 
     lock->Acquire();
     // store inside handle
@@ -230,6 +254,10 @@ int RNetManager::RecvVarBegin(int h, int userOutLen, int userSrcM, int userSrcB)
     return 0;
 }
 
+
+/* RecvVarRead:
+ *	copies received data from kernel buffer to user buffer
+ */
 int RNetManager::RecvVarRead(int h, int userBuf, int cap) {
     if (cap < 0) return -1;
 
@@ -244,6 +272,9 @@ int RNetManager::RecvVarRead(int h, int userBuf, int cap) {
     return n;
 }
 
+/* RecvVarEnd:
+ *	frees the data buffer in the kernel and cleans the handle data structure a bit
+ */
 int RNetManager::RecvVarEnd(int h) {
     lock->Acquire();
     if (!Valid(h) || !table[h].haveVar) { lock->Release(); return -1; }

@@ -23,6 +23,9 @@
 #include <strings.h> /* for bzero */
 #include "rnetmanager.h"
 
+#ifdef FILESYS_STUB
+#include "opentable.h"
+#endif
 //----------------------------------------------------------------------
 // SwapHeader
 //      Do little endian to big endian conversion on the bytes in the
@@ -145,7 +148,9 @@ AddrSpace::AddrSpace(OpenFile *executable) {
     #ifdef NETWORK
         rnet = new RNetManager();
     #endif
-
+    #ifdef FILESYS_STUB
+	openTable = new OpenTable();
+    #endif
 }
 
 //----------------------------------------------------------------------
@@ -165,7 +170,9 @@ AddrSpace::~AddrSpace() {
         delete rnet;
         rnet = 0;
     #endif
-
+    #ifdef FILESYS_STUB
+	delete openTable;
+    #endif
     // End of modification
 }
 
