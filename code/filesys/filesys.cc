@@ -78,9 +78,21 @@
 //----------------------------------------------------------------------
 
 bool MatchSector(void* item, void* arg) {
+    ASSERT(item != nullptr);
     OpenFileListEntry* entry = (OpenFileListEntry*) item;
+    ASSERT(entry->file != nullptr);
     int sector = *(int*) arg;
     return entry->sector == sector;
+}
+
+bool MatchOpenFilePtr(void* item, void* arg) {
+    OpenFileListEntry* entry = (OpenFileListEntry*) item;
+    OpenFile* file = (OpenFile*) arg;
+    return entry->file == file;
+}
+
+int FileSystem::ReturnFileFd(OpenFile* file) { //returns -1 if file not in the list
+        return openFileList->FindIf(MatchOpenFilePtr, file);
 }
 
 FileSystem::FileSystem(bool format)
@@ -238,11 +250,15 @@ FileSystem::Open(const char *name)
     DEBUG('f', "Opening file %s\n", name);
 
     int sector = currentDirectory->Find(name);
+    DEBUG('f', "File header sector is %d\n", sector);
     if (sector < 0)
         return NULL;
 
     int fileIndex = openFileList->FindIf(MatchSector, &sector);
     
+    DEBUG('f', "file index in openFileList is %d\n", fileIndex);
+
+
     if (fileIndex != -1) {
         OpenFileListEntry* entry = (OpenFileListEntry*) openFileList->GetAt(fileIndex);
         entry->refCount++;
@@ -274,6 +290,7 @@ void FileSystem::Close(const char* name) {
     ASSERT(entry->refCount > 0);
     entry->refCount--;
 
+    DEBUG('f', "The entry->refCount of the file %s is %d\n", name, entry->refCount);
     if (entry->refCount == 0) {
         entry = (OpenFileListEntry*) openFileList->RemoveAt(fileIndex);
         delete entry->file;

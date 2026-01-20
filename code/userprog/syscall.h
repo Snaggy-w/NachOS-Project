@@ -47,6 +47,12 @@
 #define SC_ProcessJoin 27
 #define SC_GetProcessHeapSize 28
 #define SC_Sbrk 29
+#define SC_Remove 30
+#define SC_List 31
+#define SC_CreateDirectory  32
+#define SC_ChangeDirectory  33
+#define SC_DeleteDirectory  34
+
 
 #ifdef IN_USER_MODE
 
@@ -107,7 +113,7 @@ typedef int OpenFileId;
 #define ConsoleOutput 1
 
 /* Create a Nachos file, with "name" */
-void Create(char *name);
+void Create(char *name, int size);
 
 /* Open the Nachos file "name", and return an "OpenFileId" that can
  * be used to read and write to the file.
@@ -126,7 +132,7 @@ void Write(char *buffer, int size, OpenFileId id);
 int Read(char *buffer, int size, OpenFileId id);
 
 /* Close the file, we're done reading and writing to it. */
-void Close(OpenFileId id);
+void Close(const char* fileName);
 
 /* User-level thread operations: Fork and Yield.  To allow multiple
  * threads to run within a user program.
@@ -164,6 +170,16 @@ void ProcessJoin(int pid);
 
 void* Sbrk();
 unsigned int GetProcessHeapSize();
+
+int Remove(char *name);
+
+void List();
+
+int CreateDirectory(char *name);
+
+int ChangeDirectory(char *name);
+
+int DeleteDirectory(char *name);
 
 #endif // IN_USER_MODE
 

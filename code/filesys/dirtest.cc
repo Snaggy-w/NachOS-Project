@@ -37,7 +37,7 @@ CreateFile(const char* name)
     }
 
     openFile->Write(CONTENTS, CONTENT_SIZE);
-    delete openFile;
+    fileSystem->Close(name);
 }
 
 //----------------------------------------------------------------------
@@ -69,7 +69,7 @@ DirectoryTest()
     file1->Read(buf, CONTENT_SIZE);
     printf("\nContent of file %s is %s\n", ROOT_FILE, buf);
     
-    delete file1;
+    fileSystem->Close(ROOT_FILE);
     memset(buf, '\0', CONTENT_SIZE);
 
 
@@ -97,7 +97,7 @@ DirectoryTest()
     
     printf("\nContent of file %s is %s\n", INNER_FILE, buf);
 
-    delete file2;
+    fileSystem->Close(INNER_FILE);
     memset(buf, '\0', CONTENT_SIZE);
 
     // List contents again
