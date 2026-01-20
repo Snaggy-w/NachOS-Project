@@ -5,7 +5,7 @@ int main()
     char ch[20];
 
     GetString(ch, 19);
-
+    /* test if feof can detect special characters */
     if (feof()) {
         PutString("EOF detected\n");
     } else {
@@ -13,5 +13,5 @@ int main()
     }
 
     PutString(ch);
-    Halt();
+    Exit(0);
 }

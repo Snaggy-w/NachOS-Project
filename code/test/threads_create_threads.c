@@ -6,6 +6,7 @@
 #define T 1
 
 
+// a test that checks how threads can create threads themselves
 void worker(void *arg) {
     int id = *(int *)arg;
     PutString("Thread ");

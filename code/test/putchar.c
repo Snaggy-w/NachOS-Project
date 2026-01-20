@@ -1,4 +1,5 @@
 #include "syscall.h"
+// print characters to screen
 void print(char c, int n)
 {
 int i;
@@ -10,6 +11,6 @@ PutChar('\n');
 int
 main()
 {
-print('a',4);
-//Halt();
+	print('a',4);
+	Exit(0);
 }

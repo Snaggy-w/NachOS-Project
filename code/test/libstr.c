@@ -1,6 +1,7 @@
 #include "syscall.h"
 #include "libstr.h"
 
+/* parse a command or string based on spaces and return the element with the specified index. much like bash cut -d ' ' command */
 char *parse_str_cmd(int index, char *in_buff, char *out_buff, int MAX_LEN) {
     int pos = 0;
     int token = 0;
@@ -40,7 +41,7 @@ char *parse_str_cmd(int index, char *in_buff, char *out_buff, int MAX_LEN) {
     return (char *)0;
 }
 
-
+// strcmp equivalent
 int str_cmp(const char *a, const char *b) {
     int i = 0;
 
@@ -53,7 +54,7 @@ int str_cmp(const char *a, const char *b) {
     return (unsigned char)a[i] - (unsigned char)b[i];
 }
 
-
+// strcpy posix equivalent
 void strcpy(char *dst, const char *src, int cap) {
     int i = 0;
     if (cap <= 0) return;
@@ -63,7 +64,7 @@ void strcpy(char *dst, const char *src, int cap) {
     }
     dst[i] = '\0';
 }
-
+// atoi posix equivalent
 int atoi(const char *s) {
     int i = 0, sign = 1, v = 0;
     while (s[i] == ' ' || s[i] == '\t' || s[i] == '\n' || s[i] == '\r') i++;
@@ -75,13 +76,14 @@ int atoi(const char *s) {
     return v * sign;
 }
 
-
+// strlen posix equivalent
 int strlen(const char *s) {
     int n = 0;
     while (s && s[n]) n++;
     return n;
 }
 
+// strip the end of string from control characters
 void rstrip_ws(char *s) {
     int n = 0;
     while (s[n] != 0) n++;
@@ -93,4 +95,5 @@ void rstrip_ws(char *s) {
             break;
     }
 }
+
 

@@ -1,8 +1,7 @@
-// test/join_many.c
 #include "syscall.h"
 #include "libthread.h"
 
-#define N 10
+#define N 10 // number of threads created
 
 void worker(void *arg) {
     int id = *(int *)arg;
@@ -24,6 +23,7 @@ int main() {
 	UserThreadCreate(worker, &args[i]);
     }
 
+    // We don't join and see what happens :)
     //PutString("Main: joining threads\n");
 
     /*for (int i = 0; i < N; i++) {
@@ -34,5 +34,5 @@ int main() {
     }*/
 
     PutString("Main: all threads created... Terminating\n");
-    Halt();
+    Exit(0);
 }

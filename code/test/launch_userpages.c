@@ -1,23 +1,15 @@
 #include "syscall.h"
 #include "libthread.h"
 
-//mutex_lock_t m;
-//cond_t c;
 
 int main(){
-
-	//mutex_init(&m);
-	//cond_init(&c);
+	/* see if we can launch 2 processes on a very low resources system */
 	PutString("Started...");
-	//mutex_lock(&m);
 	int pid1 = ForkExec("./userpages");
-	//mutex_unlock(&m);
 	PutString("Launched process with pid ");
 	PutInt(pid1);
 	PutChar('\n');
-	//mutex_lock(&m);
 	int pid2 = -1;
-	//mutex_unlock(&m);
 	PutString("Launched process with pid ");
 	PutInt(pid2);
 	PutChar('\n');

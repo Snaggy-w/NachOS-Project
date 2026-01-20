@@ -2,6 +2,8 @@
 #include "rnet.h"
 #include "libstr.h"
 
+
+// simple ping pong test to see the basic functionality of the network layer
 static void FillPing(char *buf, int cap, int seq) {
     // keep it simple: "PING <seq>"
     int n = 0;
@@ -29,8 +31,7 @@ int main() {
     GetString(line, 64);
     int dstM = atoi(line);
 
-    // We use mailbox 0 on the remote side, and bind our local socket to mailbox 0 as well.
-    // (You can change local mailbox to 1 if you want separation.)
+    // we use mailbox 0 on the remote side, and bind our local socket to mailbox 0 as well.
     int localMailbox = 0;
     int remoteMailbox = 0;
 

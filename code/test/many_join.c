@@ -1,4 +1,3 @@
-// test/many_join.c
 #include "syscall.h"
 #include "libthread.h"
 
@@ -12,6 +11,7 @@ void worker(void *arg) {
     UserThreadExit();
 }
 
+// create amny threads and attempt to join them
 int main() {
     int tids[N];
     int args[N];
@@ -33,6 +33,5 @@ int main() {
     }
 
     PutString("Main: all threads joined\n");
-    //Halt();
     Exit(0);
 }

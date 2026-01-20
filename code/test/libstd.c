@@ -8,5 +8,4 @@
 void user_init(void){
 	mutex_init(&mutex_liballoc);
 	memory_init();
-	//main();
 }

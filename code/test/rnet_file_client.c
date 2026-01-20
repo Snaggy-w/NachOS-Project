@@ -9,7 +9,7 @@
 #define CLIENT_MBOX 0
 
 static void putnl() { PutString("\n"); }
-
+/* helper: build the GET message */
 static void build_get(char *out, int cap, const char *fn, const char *outname) {
     // "GET <fn> <outname>"
     out[0] = '\0';
@@ -23,7 +23,7 @@ static void build_get(char *out, int cap, const char *fn, const char *outname) {
     for (int i = 0; outname[i] && p < cap - 1; i++) out[p++] = outname[i];
     out[p] = '\0';
 }
-
+/* helper: parse the OK response message */
 static int parse_ok_size(char *line) {
     // line: "OK <num>"
     // parse_str_cmd(0)=OK, (1)=num
@@ -57,7 +57,7 @@ int main() {
         Exit(-1);
     }
 
-    // Send GET
+    // send GET message as a fixed packet
     char req[MAX_LINE];
     build_get(req, MAX_LINE, fname, outname);
 
@@ -67,7 +67,7 @@ int main() {
         Exit(-1);
     }
 
-    // Receive OK <size> or ERR
+    // receive OK <size> or ERR as fixed packet
     char resp[64];
     int srcM, srcB;
     int nr = rnet_recv_fixed(s, resp, 64, &srcM, &srcB);
@@ -96,7 +96,7 @@ int main() {
     PutInt(expected);
     PutString(" bytes\n");
 
-    // Allocate buffer and receive var
+    // allocate buffer and receive var on the heap
     char *buf = (char*)malloc(expected);
     if (!buf && expected > 0) {
         PutString("[client] malloc failed\n");
@@ -107,13 +107,13 @@ int main() {
     int outLen = 0;
     int sm2, sb2;
     int got = rnet_recv_var(s, buf, expected, &outLen, &sm2, &sb2);
-    if (got < 0) {
+    if (got < 0) { // receive variable failed
         PutString("[client] recv_var failed\n");
         if (buf) free(buf);
         rnet_close(s);
         Exit(-1);
     }
-
+    // handle otput length different than expected length
     if (outLen != expected) {
         PutString("[client] warning: header size != expected\n");
         PutString(" server said=");
@@ -122,7 +122,7 @@ int main() {
         PutInt(outLen);
         putnl();
     }
-
+    // the actual length of data different than what is expected
     if (got != expected) {
         PutString("[client] warning: received bytes truncated? got=");
         PutInt(got);
@@ -131,7 +131,7 @@ int main() {
         putnl();
     }
 
-    // Write to disk under outname
+    // write to disk under outname
     Create(outname);
     OpenFileId of = Open(outname);
     if (of < 0) {
@@ -141,7 +141,7 @@ int main() {
         Exit(-1);
     }
 
-    // Write may return less; loop
+    // write may return less since we are using UNIX write wrapper, so we try to guarantee that all bytes are written.
     int off = 0;
     while (off < got) {
         int chunk = got - off;
@@ -151,9 +151,9 @@ int main() {
     }
     Close(of);
 
-    // Print file contents to console
+    // print file contents to console
     PutString("----- received file content -----\n");
-    // Not necessarily null-terminated; print bytes as chars
+    // not necessarily null-terminated; print bytes as chars
     for (int i = 0; i < got; i++) {
         PutChar(buf[i]);
     }
@@ -161,10 +161,10 @@ int main() {
 
     if (buf) free(buf);
 
-    // Tell server DONE (optional)
+    // tell server DONE (optional)
     rnet_send_fixed(s, serverM, SERVER_MBOX, "DONE", 5);
 
-    rnet_close(s);
+    rnet_close(s); // close socket
     Exit(0);
 }
 

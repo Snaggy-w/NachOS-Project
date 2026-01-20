@@ -13,6 +13,7 @@ void reader(void *arg) {
     UserThreadExit();
 }
 
+/* create and join two threads that get input and write them out */
 int main() {
     PutString("Main: create readers\n");
 
@@ -22,7 +23,6 @@ int main() {
     UserThreadJoin(i);
     UserThreadJoin(j);
 
-    Halt();
-    return 0;
+    Exit(0);
 }
 

@@ -2,6 +2,7 @@
 #include "libthread.h"
 sem_t sem;
 
+// a test for semaphores
 void worker(void *arg) {
     sem_wait(&sem);
     PutString("In critical section\n");

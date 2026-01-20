@@ -6,6 +6,7 @@ void simpleThread(void *arg) {
 }
 
 int main() {
+    // create 3 threads to see if they fit in a very small stack 
     PutString("Main: creating threads\n");
 
     UserThreadCreate(simpleThread, 0);
@@ -13,8 +14,6 @@ int main() {
     UserThreadCreate(simpleThread, 0);
 
     PutString("Main: calling Halt\n");
-    Halt();  // must wait for threads
-
-    return 0; // never reached
+    Exit(0);  
 }
 

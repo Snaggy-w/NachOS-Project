@@ -3,7 +3,9 @@
 
 #define THIS "aaa"
 #define THAT "bbb"
-const int N = 10; // Choose it large enough!
+const int N = 10; 
+
+// a test to see how process creation works
 void puts(char *s){
 	char *p; 
 	for (p = s; *p != '\0'; p++) PutChar(*p);

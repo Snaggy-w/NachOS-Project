@@ -1,11 +1,10 @@
 #include "syscall.h"
 
 
-
+// print integer to screen
 int main(){
 	int n = 111222333;
 	PutInt(n);
 	PutChar('\n');
-	Halt();
-	return 0;
+	Exit(0);
 }

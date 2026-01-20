@@ -6,6 +6,7 @@ int buffer[BUFFER_SIZE];
 int in = 0;
 int out = 0;
 
+// producer consumer test with threads and locking mechanisms/semaphores
 sem_t empty;   // counts empty slots
 sem_t full;    // counts full slots
 sem_t mutex;   // binary semaphore for critical section
@@ -66,7 +67,5 @@ int main() {
     UserThreadCreate(consumer, 0);
 
     UserThreadJoin(-1);
-    Halt(); // kernel stops after threads finish
-    return 0;
-}
+    Exit(0); }
 

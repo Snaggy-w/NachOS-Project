@@ -1,6 +1,9 @@
 #include "syscall.h"
 #include "libstr.h"
 
+
+// a simple shell that just executes binaries
+
 int main() {
     char prompt[] = "$ ";
     char buffer[256];
@@ -23,7 +26,7 @@ int main() {
 
         arg1[0] = '\0';
         arg2[0] = '\0';
-
+        // parse the command to see if we want to background the process or execute it in the foreground
         parse_str_cmd(0, buffer, arg1, 255);
         parse_str_cmd(1, buffer, arg2, 2);
 
@@ -33,19 +36,19 @@ int main() {
         if(str_cmp(arg1,"exit") == 0)
             break;
         
-        if (arg2[0] == '&') {
+        if (arg2[0] == '&') { // background process
             while(ForkExec(arg1) == -1){
 		PutString("Out of memory");	
                 ProcessJoin(-1);
 	    }
-        } else {
+        } else { // foreground process
             int pid = -1;
             while( (pid = ForkExec(arg1)) == -1){
 		PutString("Out of memory");
                 ProcessJoin(-1);
 	    }
             if (pid >= 0)
-                ProcessJoin(pid);
+                ProcessJoin(pid); // wait for it to exit before continuing
         }
     } 
     Halt();
