@@ -268,6 +268,7 @@ void ExceptionHandler(ExceptionType which) {
 			machine->WriteRegister(2, currentThread->space->GetBrk());
 			break;
 		}
+#ifdef FILESYS
 		case SC_Open: {
 			char filename[MAX_FILENAME_LEN];
 			int userAddr = machine->ReadRegister(4);
@@ -430,7 +431,7 @@ void ExceptionHandler(ExceptionType which) {
 			machine->WriteRegister(2, res ? (int)TRUE : (int)FALSE);
 			break;
 		}
-
+#endif  //FILESYS
 
 		#ifdef NETWORK
 
