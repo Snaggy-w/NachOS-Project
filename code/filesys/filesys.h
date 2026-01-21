@@ -89,7 +89,14 @@ class FileSystem {
     					// and the bitmap of free blocks.
 	int ReturnFileFd(OpenFile* file);
 
-    bool Create(const char *path, int initialSize);  // Create a file (UNIX creat)
+    
+	bool Create(const char *path, int initialSize = 0);  // Create a file (UNIX creat)
+
+	/*
+		Explicitly increase the number of file
+		data sectors to fit "extensionSize" additional bytes
+	*/
+	bool ExtendFile(OpenFile* file, int extensionSize);
 
     OpenFile* Open(const char *path); 	// Open a file (UNIX open)
 

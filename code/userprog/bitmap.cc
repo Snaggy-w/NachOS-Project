@@ -148,5 +148,6 @@ void BitMap::FetchFrom(OpenFile *file) {
 //----------------------------------------------------------------------
 
 void BitMap::WriteBack(OpenFile *file) {
+    DEBUG('f', "Writing bitmap of %d bytes to disk\n", numWords * sizeof(unsigned));
     file->WriteAt((char *)map, numWords * sizeof(unsigned), 0);
 }

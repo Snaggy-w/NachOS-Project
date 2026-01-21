@@ -99,25 +99,28 @@ int FileSystem::ReturnFileFd(OpenFile* file) { //returns -1 if file not in the l
 FileSystem::FileSystem(bool format)
 { 
     DEBUG('f', "Initializing the file system.\n");
+    DEBUG('f', "NumSectors: %d\n",NumSectors);
+    DEBUG('f', "NumDirect: %d\n", NumDirect);
+
     if (format) {
         BitMap *freeMap = new BitMap(NumSectors);
         Directory *directory = new Directory(NumDirEntries);
         directory->sector = DirectorySector;
-	FileHeader *mapHdr = new FileHeader;
-	FileHeader *dirHdr = new FileHeader;
+	    FileHeader *mapHdr = new FileHeader;
+	    FileHeader *dirHdr = new FileHeader;
 
         DEBUG('f', "Formatting the file system.\n");
 
     // First, allocate space for FileHeaders for the directory and bitmap
     // (make sure no one else grabs these!)
-	freeMap->Mark(FreeMapSector);	    
-	freeMap->Mark(DirectorySector);
+	    freeMap->Mark(FreeMapSector);	    
+	    freeMap->Mark(DirectorySector);
 
     // Second, allocate space for the data blocks containing the contents
     // of the directory and bitmap files.  There better be enough space!
 
-	ASSERT(mapHdr->Allocate(freeMap, FreeMapFileSize));
-	ASSERT(dirHdr->Allocate(freeMap, DirectoryFileSize));
+	    ASSERT(mapHdr->Allocate(freeMap, FreeMapFileSize));
+	    ASSERT(dirHdr->Allocate(freeMap, DirectoryFileSize));
 
     // Flush the bitmap and directory FileHeaders back to disk
     // We need to do this before we can "Open" the file, since open
@@ -125,8 +128,8 @@ FileSystem::FileSystem(bool format)
     // on it!).
 
         DEBUG('f', "Writing headers back to disk.\n");
-	mapHdr->WriteBack(FreeMapSector);    
-	dirHdr->WriteBack(DirectorySector);
+	    mapHdr->WriteBack(FreeMapSector);    
+	    dirHdr->WriteBack(DirectorySector);
 
     // OK to open the bitmap and directory files now
     // The file system operations assume these two files are left open
@@ -141,9 +144,12 @@ FileSystem::FileSystem(bool format)
     // sectors on the disk have been allocated for the file headers and
     // to hold the file data for the directory and bitmap.
 
-        DEBUG('f', "Writing bitmap and directory back to disk.\n");
+    DEBUG('f', "Writing bitmap back to disk.\n");
 	freeMap->WriteBack(freeMapFile);	 // flush changes to disk
+    DEBUG('f', "Writing root directory back to disk.\n");
 	directory->WriteBack(directoryFile);
+    DEBUG('f', "Done writing bitmap root directory back to disk.\n");
+
 
 	if (DebugIsEnabled('f')) {
 	    freeMap->Print();
@@ -234,6 +240,27 @@ FileSystem::Create(const char *path, int initialSize)
     delete hdr;
     delete freeMap;
     delete parentDirFile;
+
+    return TRUE;
+}
+
+bool FileSystem::ExtendFile(OpenFile* file, int extensionSize) {
+    DEBUG('f', "Extending file of length %d by %d bytes\n",
+         file->Length(), extensionSize);
+    if (extensionSize <= 0) {
+        return TRUE;
+    }
+
+    BitMap* freeMap = new BitMap(NumSectors);
+    freeMap->FetchFrom(freeMapFile);
+
+    if (!file->GetFileHeader()->Allocate(freeMap, extensionSize)) {
+        return FALSE;
+    }
+
+    freeMap->WriteBack(freeMapFile);
+    file->GetFileHeader()->WriteBack(file->GetHdrSector());
+    delete freeMap;
 
     return TRUE;
 }
