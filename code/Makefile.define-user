@@ -95,4 +95,4 @@ USER_FLAVORS=step5
 #     synchconsole.cc userthread.cc))
 
 $(eval $(call define-flavor,step5,userprog filesys,\
-    synchconsole.cc userthread.cc frameprovider.cc helpers.cc userprocess.cc))
+    synchconsole.cc userthread.cc frameprovider.cc helpers.cc userprocess.cc dirtest.cc))
