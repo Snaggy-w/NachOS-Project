@@ -127,6 +127,10 @@ class Thread {
     void RestoreUserState(); // restore user-level register state
 
     AddrSpace *space; // User code this thread is running.
+
+    // getter and setter for the private user registers state array
+    void SetUserRegisters(const int *regs);
+    void GetUserRegisters(int *out) const;
 #endif
 };
 

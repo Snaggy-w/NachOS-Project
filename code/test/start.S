@@ -371,6 +371,14 @@ RNetRecvVarEnd:
     	j   $31
     	.end RNetRecvVarEnd
 
+	.globl  Migrate
+    	.ent    Migrate
+Migrate:
+    	addiu $2,$0,SC_Migrate
+    	syscall
+    	j   $31
+    	.end Migrate
+
 
 
 /* dummy function to keep gcc happy */

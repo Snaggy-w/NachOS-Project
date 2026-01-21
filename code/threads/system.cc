@@ -36,6 +36,9 @@ Machine *machine;   // user program memory and registers
 #ifdef NETWORK
 PostOffice *postOffice;
 ReliablePost *reliablePost = 0;
+ReliablePost *migratePost = 0;
+#include "migrationmanager.h"
+MigrationManager *migrationManager = 0;
 #endif
 
 #ifdef CHANGED
@@ -187,7 +190,9 @@ void Initialize(int argc, char **argv) {
 
 #ifdef NETWORK
     postOffice = new PostOffice(netname, rely, 10);
-reliablePost = new ReliablePost(postOffice, /*localMailbox=*/0, "reliablePost");
+    reliablePost = new ReliablePost(postOffice, /*localMailbox=*/0, "reliablePost");
+    migratePost = new ReliablePost(postOffice, 1, "migrate reliable");
+    migrationManager = new MigrationManager(migratePost);
 #endif
 }
 
@@ -199,13 +204,28 @@ void Cleanup() {
     printf("\nCleaning up...\n");
 #ifdef NETWORK
     delete postOffice;
+    postOffice = 0;
+    if (migrationManager) {
+        delete migrationManager;
+        migrationManager = 0;
+    }
+
+     if (migratePost) {
+        delete migratePost;
+        migratePost = 0;
+    }
+    if (reliablePost) {
+        delete reliablePost;
+        reliablePost = 0;
+    }
 #endif
 
 #ifdef USER_PROGRAM
     delete machine;
     delete synchconsole;
     delete frameProvider;
-    delete STRING_BUFFER;
+    free(STRING_BUFFER);
+    STRING_BUFFER = 0;
     delete PIDCounterLock;
     delete ProcessLoopLock;
     delete AnyProcessExited;

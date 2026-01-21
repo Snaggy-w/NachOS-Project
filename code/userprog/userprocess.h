@@ -23,5 +23,16 @@ typedef struct process {
 int do_ForkExec(char* executable);
 void do_Exit(int status);
 void do_ProcessJoin(int pid);
+
+
+// a bundle for migrated processes that conatins a reference to the newly created 
+// address space and the registers to setup
+struct MigratedStart {
+    AddrSpace* space;
+    int regs[NumTotalRegs];
+};
+
+// a function to kick-off the migrated process
+void StartMigratedUserProcess(int arg);
 #endif
 

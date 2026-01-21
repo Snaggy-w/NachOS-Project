@@ -51,8 +51,24 @@ class OpenFile {
 		return numWritten;
 		}
 
-    int Length() { Lseek(file, 0, 2); return Tell(file); }
+    void Seek(int position) {
+        Lseek(file, position, 0);  // SEEK_SET
+        currentOffset = position;  // keep our logical offset consistent
+    }
     
+    int Tell() const {
+        return currentOffset; // get current offset of a file
+    }
+    
+    int Length() {
+        // save current position (logical), go end, get end, restore
+        int saved = currentOffset;
+        Lseek(file, 0, 2);                 // SEEK_END
+        int end = ::Tell(file);
+        Lseek(file, saved, 0);             // SEEK_SET restore
+        currentOffset = saved;
+        return end;
+    } 
   private:
     int file;
     int currentOffset;

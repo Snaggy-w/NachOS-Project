@@ -269,3 +269,87 @@ void AddrSpace:: ReadAtVirtual(
 int AddrSpace::GetBrk() {
     return this->brk;
 }
+
+
+#ifdef NETWORK
+	// stuff for process migration
+/* Another constructor signature used for process migration */
+AddrSpace::AddrSpace(unsigned int np, unsigned int brk_, bool /*emptyTag*/) {
+    // initial setup
+    this->creation_status = 0;
+    this->numPages = np;
+    this->brk = brk_;
+    // assign new physical pages to use
+    if ((int)numPages > frameProvider->NumAvailFrame()) {
+        this->creation_status = -1;
+        pageTable = 0;
+        numPages = 0;
+        return;
+    }
+
+    pageTable = new TranslationEntry[numPages];
+    for (unsigned int i = 0; i < numPages; i++) {
+        int physFrame = frameProvider->GetEmptyFrame(false);
+        if (physFrame < 0) { this->creation_status = -1; return; }
+
+        pageTable[i].virtualPage  = i;
+        pageTable[i].physicalPage = physFrame;
+        pageTable[i].valid = TRUE;
+        pageTable[i].use = FALSE;
+        pageTable[i].dirty = FALSE;
+        pageTable[i].readOnly = FALSE;
+    }
+
+    // user stacks: migrating single-thread => mark segment 0
+    this->userStackSegmentMap = new BitMap((int)(UserStackSize / UserStackSegment));
+    this->userStackSegmentMap->Mark(0);
+
+#ifdef NETWORK
+    rnet = new RNetManager();
+#endif
+#ifdef FILESYS_STUB
+    openTable = new OpenTable();
+#endif
+}
+
+/* CreateEmpty:
+ *	creates an empty address space that will be populated with the pages received from the migrated process
+ */
+AddrSpace* AddrSpace::CreateEmpty(unsigned int numPages, unsigned int brk) {
+    AddrSpace* s = new AddrSpace(numPages, brk, true);
+    if (s->creation_status < 0) { delete s; return 0; }
+    return s;
+}
+
+/* CopyOutMemory:
+ *	Copies out the memory content from the physical pages to a buffer
+ */
+bool AddrSpace::CopyOutMemory(char* dst, int dstBytes) {
+    int need = (int)numPages * PageSize;
+    if (!dst || dstBytes < need) return false;
+
+    for (unsigned int vpn = 0; vpn < numPages; vpn++) {
+        int phys = pageTable[vpn].physicalPage;
+        memcpy(dst + vpn * PageSize,
+               machine->mainMemory + phys * PageSize,
+               PageSize);
+    }
+    return true;
+}
+
+/* CopyInMemory:
+ *	Copies bytes from a buffer to the physical pages of the address space
+ */
+bool AddrSpace::CopyInMemory(const char* src, int srcBytes) {
+    int need = (int)numPages * PageSize;
+    if (!src || srcBytes < need) return false;
+
+    for (unsigned int vpn = 0; vpn < numPages; vpn++) {
+        int phys = pageTable[vpn].physicalPage;
+        memcpy(machine->mainMemory + phys * PageSize,
+               src + vpn * PageSize,
+               PageSize);
+    }
+    return true;
+}
+#endif

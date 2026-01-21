@@ -72,6 +72,7 @@ extern SynchDisk *synchDisk;
 extern PostOffice *postOffice;
 #include "reliable.h"
 extern ReliablePost *reliablePost;
+extern ReliablePost *migratePost;
 #endif
 
 #endif // SYSTEM_H

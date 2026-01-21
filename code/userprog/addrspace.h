@@ -23,11 +23,11 @@
 #define UserStackSegment (PageSize * 2) // the size of the chunk used as a user thread's stack
 
 #ifdef NETWORK
-#include "rnetmanager.h"
+class RNetManager;
 #endif
 
 #ifdef FILESYS_STUB
-#include "opentable.h"
+class OpenTable;
 #endif
 
 class AddrSpace {
@@ -52,7 +52,19 @@ class AddrSpace {
     int GetBrk();
 #ifdef NETWORK
     RNetManager* rnet;
-#endif  
+    // stuff for process migration  
+    // migration helper
+    static AddrSpace* CreateEmpty(unsigned int numPages, unsigned int brk);
+    
+    // copy virtual memory out/in by page
+    bool CopyOutMemory(char* dst, int dstBytes);
+    bool CopyInMemory(const char* src, int srcBytes);
+
+#endif
+
+  
+  
+  // 
   private:
     TranslationEntry *pageTable; // Assume linear page table translation
     // for now!
@@ -62,6 +74,11 @@ class AddrSpace {
     static void ReadAtVirtual(
       OpenFile *executable, int virtualaddr, int numBytes, int position,
       TranslationEntry *pageTable, unsigned numPages);
+    #ifdef NETWORK
+    	// stuff for process migration
+        // new constructor signature to build address space from serialized image
+	AddrSpace(unsigned int numPages, unsigned int brk, bool emptyTag);
+    #endif
 };
 
 #endif // ADDRSPACE_H

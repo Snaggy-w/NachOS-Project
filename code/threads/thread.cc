@@ -376,4 +376,13 @@ void Thread::RestoreUserState() {
     for (int i = 0; i < NumTotalRegs; i++)
         machine->WriteRegister(i, userRegisters[i]);
 }
+
+// setter for the user registers
+void Thread::SetUserRegisters(const int *regs) {
+    for (int i = 0; i < NumTotalRegs; i++) userRegisters[i] = regs[i];
+}
+// getter for the user registers
+void Thread::GetUserRegisters(int *out) const {
+    for (int i = 0; i < NumTotalRegs; i++) out[i] = userRegisters[i];
+}
 #endif

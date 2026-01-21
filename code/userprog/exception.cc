@@ -40,6 +40,11 @@
 
 #ifdef NETWORK
 #include "rnetmanager.h"
+int do_Migrate(int dstMachine);
+#endif
+
+#ifdef FILESYS_STUB
+#include "opentable.h"
 #endif
 
 // A helper function that is used to copy over large number of arguments
@@ -189,7 +194,7 @@ void ExceptionHandler(ExceptionType which) {
 			break;
 		    }
 
-		    int fd = currentThread->space->openTable->Add(f);
+		    int fd = currentThread->space->openTable->AddWithName(f,name);
 		    if (fd < 0) {
 			DEBUG('f',"failed on fd assignment thing");
 			delete f;
@@ -513,6 +518,12 @@ void ExceptionHandler(ExceptionType which) {
 		    int rc = currentThread->space->rnet->RecvVarEnd(a[0]);
 		    machine->WriteRegister(2, rc);
 		    break;
+		}
+		case SC_Migrate: {
+ 		    int dst = machine->ReadRegister(4);   // arg1
+    		    int rc = do_Migrate(dst);             
+    		    machine->WriteRegister(2, rc);
+    		    break;
 		}
 
 	#endif // NETWORK

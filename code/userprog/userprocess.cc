@@ -159,3 +159,26 @@ void do_Exit(int status) {
     // Never returns
 }
 
+
+#ifdef NETWORK
+/* StartMigratedUserProcess: 
+ *	Sets up the machine state for the newly migrated process to start
+ */
+void StartMigratedUserProcess(int arg) {
+    MigratedStart* ms = (MigratedStart*)arg; // get the migrated process bundle
+    currentThread->space = ms->space; // setup the currentThread space to the migrated space
+
+    // install address space mappings
+    ms->space->RestoreState(); 
+
+    // Restore user regs into thread and CPU
+    //for (int i = 0; i < NumTotalRegs; i++)
+    //    currentThread->userRegisters[i] = ms->regs[i];
+    currentThread->SetUserRegisters(ms->regs); // setup the user registers from the migrated machine
+    currentThread->RestoreUserState();
+
+    delete ms; // free start bundle
+    machine->Run(); // run the process
+}
+
+#endif

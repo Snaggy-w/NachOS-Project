@@ -55,7 +55,7 @@
 #define SC_RNetRecvVarBegin 35
 #define SC_RNetRecvVarRead 36
 #define SC_RNetRecvVarEnd 37
-
+#define SC_Migrate 38
 
 #ifdef IN_USER_MODE
 
@@ -193,6 +193,7 @@ int RNetRecvVarBegin(RNetArgs* a);
 int RNetRecvVarRead(RNetArgs* a);
 int RNetRecvVarEnd(RNetArgs* a);
 
+int Migrate(int dstMachine);
 #endif // IN_USER_MODE
 
 #endif /* SYSCALL_H */
