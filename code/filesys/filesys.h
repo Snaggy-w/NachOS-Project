@@ -37,6 +37,12 @@
 
 #include "copyright.h"
 #include "openfile.h"
+#include "directory.h"
+#include "list.h"
+
+typedef LIST_H::List List_t;
+
+#define PATH_DELIM '/'
 
 #ifdef FILESYS_STUB 		// Temporarily implement file system calls as 
 				// calls to UNIX, until the real file system
@@ -65,6 +71,16 @@ class FileSystem {
 };
 
 #else // FILESYS
+
+/*Representation of an entry in the system descriptor table.*/
+
+class OpenFileListEntry { 
+	public:
+		OpenFile* file;
+		int sector; //the header sector of this file
+	};
+
+
 class FileSystem {
   public:
     FileSystem(bool format);		// Initialize the file system.
@@ -73,25 +89,46 @@ class FileSystem {
     					// If "format", there is nothing on
 					// the disk, so initialize the directory
     					// and the bitmap of free blocks.
+	int ReturnFileFd(OpenFile* file);
 
-    bool Create(const char *name, int initialSize);  	
-					// Create a file (UNIX creat)
+    
+	bool Create(const char *path, int initialSize = 0);  // Create a file (UNIX creat)
 
-    OpenFile* Open(const char *name); 	// Open a file (UNIX open)
+	/*
+		Explicitly increase the number of file
+		data sectors to fit "extensionSize" additional bytes
+	*/
+	bool ExtendFile(OpenFile* file, int extensionSize);
 
-    bool Remove(const char *name); 	// Delete a file (UNIX unlink)
+    OpenFile* Open(const char *path); 	// Open a file (UNIX open)
+
+	void Close(const char* path); // Close an open file residing in openFileList
+
+    bool Remove(const char *path); 	// Delete a file (UNIX unlink)
 
     void List();			// List all the files in the file system
 
     void Print();			// List all the files and their contents
 
-  private:
-   OpenFile* freeMapFile;		// Bit map of free disk blocks,
-					// represented as a file
-   OpenFile* directoryFile;		// "Root" directory -- list of 
-					// file names, represented as a file
-};
+	Directory* createRootDirectory();
 
+	bool createDirectory(const char* path);
+
+	bool changeDirectory(const char* path);
+
+	bool deleteDirectory(const char* path);
+
+  private:
+   	OpenFile* freeMapFile;		// Bit map of free disk blocks,
+					// represented as a file
+   	OpenFile* directoryFile;		// current directory open file
+
+	List_t* parsePath(char* path);	//path parser returning a list of directory and file names
+
+	Directory* resolvePath(const char* path, char* lastName); // get directory based on the path to it
+
+	int getDirectorySector(const char* path, char* dirName);
+};
 #endif // FILESYS
 
 #endif // FS_H

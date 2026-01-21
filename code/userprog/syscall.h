@@ -56,6 +56,12 @@
 #define SC_RNetRecvVarRead 36
 #define SC_RNetRecvVarEnd 37
 
+#define SC_Remove 38
+#define SC_List 39
+#define SC_CreateDirectory  40
+#define SC_ChangeDirectory  41
+#define SC_DeleteDirectory  42
+
 
 #ifdef IN_USER_MODE
 
@@ -115,16 +121,20 @@ typedef int OpenFileId;
 #define ConsoleInput 0
 #define ConsoleOutput 1
 
-/* Create a Nachos file, with "name" */
-void Create(char *name);
+/*NOTE: the string argument "path" follows the UNIX logic. Meaning,
+path can be relative or absolute and the concerning file will be observed in regard of the path.
+"path can also be just the name of the file, in which case the current directory is used."*/
 
-/* Open the Nachos file "name", and return an "OpenFileId" that can
+/* Create a Nachos file, with "path" as an arg. */
+int Create(char *path, int size);
+
+/* Open the Nachos file "path", and return an "OpenFileId" that can
  * be used to read and write to the file.
  */
-OpenFileId Open(char *name);
+OpenFileId Open(char *path);
 
 /* Write "size" bytes from "buffer" to the open file. */
-void Write(char *buffer, int size, OpenFileId id);
+int Write(char *buffer, int size, OpenFileId id);
 
 /* Read "size" bytes from the open file into "buffer".
  * Return the number of bytes actually read -- if the open file isn't
@@ -135,7 +145,7 @@ void Write(char *buffer, int size, OpenFileId id);
 int Read(char *buffer, int size, OpenFileId id);
 
 /* Close the file, we're done reading and writing to it. */
-void Close(OpenFileId id);
+void Close(const char* path);
 
 /* User-level thread operations: Fork and Yield.  To allow multiple
  * threads to run within a user program.
@@ -192,6 +202,16 @@ int RNetSendVar(RNetArgs* a);
 int RNetRecvVarBegin(RNetArgs* a);
 int RNetRecvVarRead(RNetArgs* a);
 int RNetRecvVarEnd(RNetArgs* a);
+
+int Remove(char *path);
+
+void List();
+
+int CreateDirectory(char *path);
+
+int ChangeDirectory(char *path);
+
+int DeleteDirectory(char *path);
 
 #endif // IN_USER_MODE
 

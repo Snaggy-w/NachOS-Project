@@ -40,6 +40,8 @@ class SynchList {
     void DropAt(int index);
     void *RemoveAt(int index);
 
+    int isExistElement(void* elt);
+    int FindIf(ListComparator cmp, void* arg);
     void SortedInsert(void *item, long long key);
     void *SortedRemove(long long *keyPtr);     
     void *SortedGet(long long key);             

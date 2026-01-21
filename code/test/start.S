@@ -372,6 +372,45 @@ RNetRecvVarEnd:
     	.end RNetRecvVarEnd
 
 
+	.globl  Remove
+	.ent	Remove
+Remove:
+	addiu $2, $0, SC_Remove
+	syscall
+	j	$31
+	.end 	Remove
+
+	.globl  List
+	.ent	List
+List:
+	addiu $2, $0, SC_List
+	syscall
+	j	$31
+	.end 	List
+
+	.globl  CreateDirectory
+	.ent	CreateDirectory
+CreateDirectory:
+	addiu $2, $0, SC_CreateDirectory
+	syscall
+	j	$31
+	.end 	CreateDirectory
+
+	.globl  ChangeDirectory
+	.ent	ChangeDirectory
+ChangeDirectory:
+	addiu $2, $0, SC_ChangeDirectory
+	syscall
+	j	$31
+	.end 	ChangeDirectory
+
+	.globl  DeleteDirectory
+	.ent	DeleteDirectory
+DeleteDirectory:
+	addiu $2, $0, SC_DeleteDirectory
+	syscall
+	j	$31
+	.end 	DeleteDirectory
 
 /* dummy function to keep gcc happy */
         .globl  __main

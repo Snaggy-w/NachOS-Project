@@ -17,8 +17,13 @@
 #include "disk.h"
 #include "bitmap.h"
 
-#define NumDirect 	((SectorSize - 2 * sizeof(int)) / sizeof(int))
-#define MaxFileSize 	(NumDirect * SectorSize)
+// for now we are implying a two-level indexing structure rooted at the primary
+// FileHeader - the one fetched when creating an instance of OpenFile
+
+#define NumDirect ((SectorSize - 3 * sizeof(int)) / sizeof(int))
+#define NumPrimary (NumDirect - 1)
+#define FileSectorsMaxNumber (NumDirect + NumPrimary)
+#define MaxFileSize (FileSectorsMaxNumber * SectorSize)
 
 // The following class defines the Nachos "file header" (in UNIX terms,  
 // the "i-node"), describing where on disk to find all of the data in the file.
@@ -37,30 +42,32 @@
 
 class FileHeader {
   public:
-    bool Allocate(BitMap *bitMap, int fileSize);// Initialize a file header, 
-						//  including allocating space 
-						//  on disk for the file data
-    void Deallocate(BitMap *bitMap);  		// De-allocate this file's 
-						//  data blocks
+  /*
+    Allocate space on disk for the file data of "size" bytes
+  */
+    bool Allocate(BitMap *bitMap, int size);
+    void Deallocate(BitMap *bitMap);  		// De-allocate this file's data blocks
 
     void FetchFrom(int sectorNumber); 	// Initialize file header from disk
-    void WriteBack(int sectorNumber); 	// Write modifications to file header
-					//  back to disk
+    void WriteBack(int sectorNumber); 	// Write modifications to file header back to disk
 
-    int ByteToSector(int offset);	// Convert a byte offset into the file
-					// to the disk sector containing
-					// the byte
+    int ByteToSector(int offset);	// Convert a byte offset into the file to the disk sector containing the byte
 
-    int FileLength();			// Return the length of the file 
-					// in bytes
+    int FileLength();			// Return the length of the file in bytes
 
     void Print();			// Print the contents of the file.
 
   private:
-    int numBytes;			// Number of bytes in the file
-    int numSectors;			// Number of data sectors in the file
-    int dataSectors[NumDirect];		// Disk sector numbers for each data 
-					// block in the file
+    int numBytes = 0;			// Number of bytes in the file
+    int numSectors = 0;			// Number of data sectors in the file
+    FileHeader* indirectIndexHdr = NULL;   // File header storing second-level data sectors
+
+    /*
+      Disk sector numbers for each data  block in the file.
+      The last element is the number of the sector storing 
+      the index to second-level data of the file.
+    */
+    int dataSectors[NumDirect];
 };
 
 #endif // FILEHDR_H

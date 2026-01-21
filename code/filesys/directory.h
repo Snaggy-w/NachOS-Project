@@ -36,6 +36,7 @@ class DirectoryEntry {
 					//   FileHeader for this file 
     char name[FileNameMaxLen + 1];	// Text name for file, with +1 for 
 					// the trailing '\0'
+    bool isDirectory = FALSE; //assigning here prevents modifying the entire directory.cc. The value of this field will be changed in filesys.cc
 };
 
 // The following class defines a UNIX-like "directory".  Each entry in
@@ -61,7 +62,9 @@ class Directory {
     int Find(const char *name);		// Find the sector number of the 
 					// FileHeader for file: "name"
 
-    bool Add(const char *name, int newSector);  // Add a file name into the directory
+    int FindDirectory(const char *name);
+
+    bool Add(const char *name, int newSector, bool isDirectory = false);  // Add a file name into the directory
 
     bool Remove(const char *name);	// Remove a file from the directory
 
@@ -70,12 +73,12 @@ class Directory {
     void Print();			// Verbose print of the contents
 					//  of the directory -- all the file
 					//  names and their contents.
-
-  private:
+    int sector;
     int tableSize;			// Number of directory entries
     DirectoryEntry *table;		// Table of pairs: 
 					// <file name, file header location> 
 
+    private: 
     int FindIndex(const char *name);	// Find the index into the directory 
 					//  table corresponding to "name"
 };

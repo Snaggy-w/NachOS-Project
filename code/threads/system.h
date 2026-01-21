@@ -32,8 +32,9 @@ extern Interrupt *interrupt;        // interrupt status
 extern Statistics *stats;           // performance metrics
 extern Timer *timer;                // the hardware alarm clock
 
-#define MAX_STRING_SIZE 201 // Can't put more since large sizes can crash the kernel stack
+#define MAX_STRING_SIZE 512 // Can't put more since large sizes can crash the kernel stack
 			    // the last byte is to account for the Null byte terminator at the end
+#define MAX_OPEN_FILES 10
 
 #ifdef USER_PROGRAM
 #include "machine.h"
@@ -60,6 +61,9 @@ extern Semaphore *SemExitedProcesses;
 #ifdef FILESYS_NEEDED // FILESYS or FILESYS_STUB
 #include "filesys.h"
 extern FileSystem *fileSystem;
+extern Directory *currentDirectory;
+extern SynchList *openFileList;
+extern Directory *rootDirectory;
 #endif
 
 #ifdef FILESYS

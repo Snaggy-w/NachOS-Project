@@ -268,6 +268,168 @@ void ExceptionHandler(ExceptionType which) {
 			machine->WriteRegister(2, currentThread->space->GetBrk());
 			break;
 		}
+		case SC_Open: {
+			char filename[MAX_FILENAME_LEN];
+			int userAddr = machine->ReadRegister(4);
+
+			if (!Helpers::CopyStringFromUser(userAddr, filename, MAX_FILENAME_LEN)) {
+				machine->WriteRegister(2, -1);
+				break;
+			}
+
+			OpenFile* file = fileSystem->Open(filename);
+			if (file == NULL) {
+				machine->WriteRegister(2, -1);
+				break;
+			}
+
+			int fd = fileSystem->ReturnFileFd(file);
+			machine->WriteRegister(2, fd);
+			break;
+		}
+		case SC_Create: {
+			char filename[MAX_FILENAME_LEN];
+			int userAddr = machine->ReadRegister(4);
+			int size = machine->ReadRegister(5);
+
+			if (!Helpers::CopyStringFromUser(userAddr, filename, MAX_FILENAME_LEN)) {
+				machine->WriteRegister(2, (int)FALSE);
+				break;
+			}
+
+			bool res = fileSystem->Create(filename, size);
+			machine->WriteRegister(2, res ? (int)TRUE : (int)FALSE);
+			break;
+		}
+		case SC_Read: {
+			int userBufAddr = machine->ReadRegister(4);
+			int numBytes = machine->ReadRegister(5);
+			int fd = machine->ReadRegister(6);
+
+			OpenFileListEntry* entry = (OpenFileListEntry*) openFileList->GetAt(fd);
+
+			if (entry == NULL) {
+				machine->WriteRegister(2, -1);
+				break;
+			}
+
+			char* kernelBuf = new char[numBytes];
+
+			DEBUG('f', "THE FILE POINTER FROM KERNEL SPACE IS %p\n", (OpenFile*) entry->file);
+
+			int prevSeekPosition = entry->file->getSeek();
+			entry->file->setSeek(0);
+
+			int bytesRead = entry->file->Read(kernelBuf, numBytes);
+			entry->file->setSeek(prevSeekPosition);
+
+			DEBUG('f', "THE STRING FROM KERNEL SPACE IS %s\n", kernelBuf);
+
+			for (int i = 0; i < bytesRead; i++) {
+				machine->WriteMem(userBufAddr + i, 1, kernelBuf[i]);
+			}
+
+			delete[] kernelBuf;
+			machine->WriteRegister(2, bytesRead);
+			break;
+		}
+		case SC_Write: {
+			int userBufAddr = machine->ReadRegister(4);
+			int numBytes = machine->ReadRegister(5);
+			int fd = machine->ReadRegister(6);
+
+			OpenFileListEntry* entry = (OpenFileListEntry*) openFileList->GetAt(fd);
+
+			if (entry == NULL) {
+				machine->WriteRegister(2, -1);
+				break;
+			}
+
+			DEBUG('f', "THE FILE POINTER FROM KERNEL SPACE IS %p\n", (OpenFile*) entry->file);
+
+			char* kernelBuf = new char[numBytes];
+
+			for (int i = 0; i < numBytes; i++) {
+				int value;
+				machine->ReadMem(userBufAddr + i, 1, &value);
+				kernelBuf[i] = (char)value;
+			}
+
+			DEBUG('f', "THE STRING FROM KERNEL SPACE IS %s\n", kernelBuf);
+
+			int bytesWritten = entry->file->Write(kernelBuf, numBytes);
+
+			delete[] kernelBuf;
+			machine->WriteRegister(2, bytesWritten);
+			break;
+		}
+		case SC_Close: {
+			char filename[MAX_FILENAME_LEN];
+			int userAddr = machine->ReadRegister(4);
+
+			if (!Helpers::CopyStringFromUser(userAddr, filename, MAX_FILENAME_LEN)) {
+				break;
+			}
+
+			fileSystem->Close(filename);
+			break;
+		}
+		case SC_Remove: {
+			char filename[MAX_FILENAME_LEN];
+			int userFileNameAddr = (int) machine->ReadRegister(4);
+
+			if (!Helpers::CopyStringFromUser(userFileNameAddr, filename, MAX_FILENAME_LEN)) {
+				machine->WriteRegister(2, (int)FALSE);
+				break;
+			}
+
+			bool res = fileSystem->Remove(filename);
+			machine->WriteRegister(2, res ? (int)TRUE : (int)FALSE);
+			break;
+		}
+		case SC_List: {
+			fileSystem->List();
+			break;
+		}
+		case SC_CreateDirectory: {
+			char dirname[MAX_FILENAME_LEN];
+			int userDirNameAddr = (int) machine->ReadRegister(4);
+
+			if (!Helpers::CopyStringFromUser(userDirNameAddr, dirname, MAX_FILENAME_LEN)) {
+				machine->WriteRegister(2, (int)FALSE);
+				break;
+			}
+
+			bool res = fileSystem->createDirectory(dirname);
+			machine->WriteRegister(2, res ? (int)TRUE : (int)FALSE);
+			break;
+		}
+		case SC_ChangeDirectory: {
+			char dirname[MAX_FILENAME_LEN];
+			int userDirNameAddr = (int) machine->ReadRegister(4);
+
+			if (!Helpers::CopyStringFromUser(userDirNameAddr, dirname, MAX_FILENAME_LEN)) {
+				machine->WriteRegister(2, (int)FALSE);
+				break;
+			}
+
+			bool res = fileSystem->changeDirectory(dirname);
+			machine->WriteRegister(2, res ? (int)TRUE : (int)FALSE);
+			break;
+		}
+		case SC_DeleteDirectory: {
+			char dirname[MAX_FILENAME_LEN];
+			int userDirNameAddr = (int) machine->ReadRegister(4);
+
+			if (!Helpers::CopyStringFromUser(userDirNameAddr, dirname, MAX_FILENAME_LEN)) {
+				machine->WriteRegister(2, (int)FALSE);
+				break;
+			}
+
+			bool res = fileSystem->deleteDirectory(dirname);
+			machine->WriteRegister(2, res ? (int)TRUE : (int)FALSE);
+			break;
+		}
 
 
 		#ifdef NETWORK

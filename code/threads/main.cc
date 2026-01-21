@@ -33,6 +33,11 @@
 //    -l lists the contents of the Nachos directory
 //    -D prints the contents of the entire file system
 //    -t tests the performance of the Nachos file system
+//    -dirtest runs a number of tests, manipulating with the filesys
+//    -mkdir creates a directory
+//    -touch creates a file
+//    -cd changes the directory
+//    -rd removes a directory
 //
 //  NETWORK
 //    -n sets the network reliability
@@ -61,7 +66,8 @@ extern void Print(char *file), PerformanceTest(void);
 extern void StartProcess(char *file), ConsoleTest(char *in, char *out), SynchConsoleTest(char *in, char *out);
 extern void MailTest(int networkID);
 extern void RingTest(int nbmachine);
-extern void ReliableTest(int farAddr);
+extern void ReliableTest(int farAddr);extern void DirectoryTest(void);
+
 //----------------------------------------------------------------------
 // main
 //      Bootstrap the operating system kernel.
@@ -137,7 +143,20 @@ int main(int argc, char **argv) {
             fileSystem->Print();
         } else if (!strcmp(*argv, "-t")) { // performance test
             PerformanceTest();
-        }
+        } else if(!strcmp(*argv, "-mkdir")) {
+            fileSystem->createDirectory(*(argv + 1));
+        } else if(!strcmp(*argv, "-cd")) {
+            fileSystem->changeDirectory(*(argv + 1));
+        } else if (!strcmp(*argv, "-rd")) {
+            fileSystem->deleteDirectory(*(argv + 1));
+        } else if (!strcmp(*argv, "-touch")) {
+            ASSERT(argc > 1);
+            fileSystem->Create(*(argv + 1), atoi(*(argv + 2)));
+            argCount = 2;
+        } else if (!strcmp(*argv, "-dirtest")) {
+            DirectoryTest();
+        }   
+        
 #endif // FILESYS
 #ifdef NETWORK
         if (!strcmp(*argv, "-o")) {
