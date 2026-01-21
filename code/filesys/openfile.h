@@ -87,11 +87,16 @@ class OpenFile {
 					// end of file, tell, lseek back 
 	int getSeek();
 	void setSeek(int newSeek);
+
+	int GetHdrSector();
+
+	FileHeader* GetFileHeader();
     
   private:
     FileHeader *hdr;			// Header for this file 
 	int seekPosition;			// Current position within the file
 
+	int hdrSector;				// sector where this file's header  is stored
 };
 
 #endif // FILESYS

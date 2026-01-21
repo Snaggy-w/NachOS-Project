@@ -29,25 +29,57 @@
 
 //----------------------------------------------------------------------
 // FileHeader::Allocate
-// 	Initialize a fresh file header for a newly created file.
-//	Allocate data blocks for the file out of the map of free disk blocks.
-//	Return FALSE if there are not enough free blocks to accomodate
-//	the new file.
+//	Allocate data blocks for the file out of the map of free disk blocks
+//  whenever additional "size" bytes for the files are required.
+//	Return FALSE if there are not enough space to accomodate
+//	"size" bytes.
 //
 //	"freeMap" is the bit map of free disk sectors
-//	"fileSize" is the bit map of free disk sectors
+//	"size" is the number of bytes that need to be allocated
+//   in addition to the exisiting file bytes
 //----------------------------------------------------------------------
 
 bool
-FileHeader::Allocate(BitMap *freeMap, int fileSize)
+FileHeader::Allocate(BitMap *freeMap, int size)
 { 
-    numBytes = fileSize;
-    numSectors  = divRoundUp(fileSize, SectorSize);
-    if (freeMap->NumClear() < numSectors)
-	return FALSE;		// not enough space
+    int resultNumBytes = numBytes + size;
+    int numNewSectors = divRoundUp(size, SectorSize);
+    int resultNumSectors = numSectors + numNewSectors;
 
-    for (int i = 0; i < numSectors; i++)
-	dataSectors[i] = freeMap->Find();
+    DEBUG('f', "Allocating %d data sectors for an existing file of %d sectors...\n", numNewSectors, numSectors);
+
+
+    bool needNewIndirectHdr = (numSectors <= (int)NumPrimary) && (resultNumSectors > (int)NumPrimary);
+    int indirectHdrSectorNum = needNewIndirectHdr ? 1 : 0;
+    int totalNumNewSectors = numNewSectors + indirectHdrSectorNum;
+
+    if (freeMap->NumClear() < totalNumNewSectors || resultNumBytes > (int)MaxFileSize) {
+	    return FALSE;		// not enough space
+    }
+
+    // allocating second level sectors for the first time
+    if (needNewIndirectHdr) {
+        DEBUG('f', "Allocating indirect file header...\n", size);
+        indirectIndexHdr = new FileHeader;
+        dataSectors[NumPrimary] = freeMap->Find();
+        DEBUG('f', "Allocated indirect file header at sector %d\n", dataSectors[NumPrimary]);
+    }
+
+    for (int i = 0; i < numNewSectors; i++) {
+        int sectorId = i + numSectors;
+        if (sectorId < (int)NumPrimary) {
+	        dataSectors[sectorId] = freeMap->Find();
+        } else {
+            ASSERT(indirectIndexHdr != NULL);
+            indirectIndexHdr->dataSectors[sectorId - (int)NumPrimary] = freeMap->Find();
+        }
+    }
+
+    numBytes = resultNumBytes;
+    numSectors = resultNumSectors;
+    
+    DEBUG('f', "Allocated data sectors!\n");
+
     return TRUE;
 }
 
@@ -61,10 +93,24 @@ FileHeader::Allocate(BitMap *freeMap, int fileSize)
 void 
 FileHeader::Deallocate(BitMap *freeMap)
 {
+    DEBUG('f', "Data sectors deallocating...\n");
+    int sector;
     for (int i = 0; i < numSectors; i++) {
-	ASSERT(freeMap->Test((int) dataSectors[i]));  // ought to be marked!
-	freeMap->Clear((int) dataSectors[i]);
+        if (i < (int)NumPrimary) {
+            sector = dataSectors[i];
+        } else {
+            sector = indirectIndexHdr->dataSectors[i - NumPrimary];
+        }
+	    ASSERT(freeMap->Test(sector));  // ought to be marked!
+	    freeMap->Clear(sector);
     }
+    if (numSectors > (int)NumPrimary) {
+        sector = dataSectors[NumPrimary];
+        ASSERT(freeMap->Test(sector));  // ought to be marked!
+	    freeMap->Clear(sector);
+    }
+    DEBUG('f', "Deallocated data sectors...\n");
+
 }
 
 //----------------------------------------------------------------------
@@ -77,7 +123,20 @@ FileHeader::Deallocate(BitMap *freeMap)
 void
 FileHeader::FetchFrom(int sector)
 {
+    DEBUG('f', "Fetching file header from disk sector %d...\n", sector);
+
     synchDisk->ReadSector(sector, (char *)this);
+
+    // the second-level data blocks are present
+    // this condition is never satisfied within indirect index headers
+    if (numSectors > (int)NumPrimary) { 
+        indirectIndexHdr->FetchFrom(dataSectors[NumPrimary]);
+        DEBUG('f', "Fetched secondary file header from disk sector %d...\n", 
+            dataSectors[NumPrimary]);
+
+    }
+    DEBUG('f', "Fetched file header from disk! \n", sector);
+
 }
 
 //----------------------------------------------------------------------
@@ -90,7 +149,17 @@ FileHeader::FetchFrom(int sector)
 void
 FileHeader::WriteBack(int sector)
 {
+    DEBUG('f', "Writing file header to disk sector %d...\n", sector);
+
     synchDisk->WriteSector(sector, (char *)this); 
+
+    if (indirectIndexHdr != NULL) {
+        indirectIndexHdr->WriteBack(dataSectors[NumPrimary]);
+        DEBUG('f', "Done writing secondary file header to disk sector %d...\n", dataSectors[NumPrimary]);
+
+    }
+    DEBUG('f', "Done writing file header to disk!\n");
+
 }
 
 //----------------------------------------------------------------------
@@ -106,7 +175,13 @@ FileHeader::WriteBack(int sector)
 int
 FileHeader::ByteToSector(int offset)
 {
-    return(dataSectors[offset / SectorSize]);
+    int sectorId = offset / SectorSize;
+    if (sectorId <= (int)NumPrimary) {
+        return(dataSectors[offset / SectorSize]);
+    } else { // search among second-level data sectors
+        int secondarySectorId = sectorId - NumPrimary;
+        return indirectIndexHdr->dataSectors[secondarySectorId];
+    }
 }
 
 //----------------------------------------------------------------------
@@ -133,17 +208,33 @@ FileHeader::Print()
     char *data = new char[SectorSize];
 
     printf("FileHeader contents.  File size: %d.  File blocks:\n", numBytes);
-    for (i = 0; i < numSectors; i++)
-	printf("%d ", dataSectors[i]);
+    for (i = 0; i < numSectors; i++) {
+        if (i < (int)NumPrimary) {
+	        printf("%d ", dataSectors[i]);
+        } else {
+            int secondaryLevelSectorId = i - NumPrimary;
+            printf("%d ", indirectIndexHdr->dataSectors[secondaryLevelSectorId]);
+
+        }
+    }
     printf("\nFile contents:\n");
+    int sector;
     for (i = k = 0; i < numSectors; i++) {
-	synchDisk->ReadSector(dataSectors[i], data);
+        if (i < (int)NumPrimary) {
+	        sector = dataSectors[i];
+        } else {
+            int secondaryLevelSectorId = i - NumPrimary;
+            sector = indirectIndexHdr->dataSectors[secondaryLevelSectorId];
+
+        }
+	    synchDisk->ReadSector(sector, data);
         for (j = 0; (j < SectorSize) && (k < numBytes); j++, k++) {
-	    if ('\040' <= data[j] && data[j] <= '\176')   // isprint(data[j])
-		printf("%c", data[j]);
-            else
-		printf("\\%x", (unsigned char)data[j]);
-	}
+	        if ('\040' <= data[j] && data[j] <= '\176')  { // isprint(data[j])
+		        printf("%c", data[j]);
+            } else {
+		    printf("\\%x", (unsigned char)data[j]);
+            }
+	    }
         printf("\n"); 
     }
     delete [] data;
