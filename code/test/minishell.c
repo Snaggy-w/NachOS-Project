@@ -1,7 +1,6 @@
 #include "syscall.h"
 #include "libstr.h"
 
-
 //NOTE : Security checks are not made yet, we are trusting the user!
 
 int main() {
@@ -65,7 +64,7 @@ int main() {
             RET_VAL = Open(arg2);
         }
         else if(str_cmp(arg1,"w") == 0){
-            Write(arg2, atoi(arg3), atoi(arg4));
+            RET_VAL = Write(arg2, atoi(arg3), atoi(arg4));
         }
         else if(str_cmp(arg1,"r") == 0){
             int readSize = atoi(arg2);
@@ -82,6 +81,7 @@ int main() {
             if (n > 0) {
                 tmp_buf[n] = '\0';
                 PutString(tmp_buf);
+                PutChar('\n');
             }
 
             RET_VAL = n;

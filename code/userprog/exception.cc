@@ -297,7 +297,15 @@ void ExceptionHandler(ExceptionType which) {
 
 			char* kernelBuf = new char[numBytes];
 
+			DEBUG('f', "THE FILE POINTER FROM KERNEL SPACE IS %p\n", (OpenFile*) entry->file);
+
+			int prevSeekPosition = entry->file->getSeek();
+			entry->file->setSeek(0);
+
 			int bytesRead = entry->file->Read(kernelBuf, numBytes);
+			entry->file->setSeek(prevSeekPosition);
+
+			DEBUG('f', "THE STRING FROM KERNEL SPACE IS %s\n", kernelBuf);
 
 			for (int i = 0; i < bytesRead; i++) {
 				machine->WriteMem(userBufAddr + i, 1, kernelBuf[i]);
@@ -319,6 +327,8 @@ void ExceptionHandler(ExceptionType which) {
 				break;
 			}
 
+			DEBUG('f', "THE FILE POINTER FROM KERNEL SPACE IS %p\n", (OpenFile*) entry->file);
+
 			char* kernelBuf = new char[numBytes];
 
 			for (int i = 0; i < numBytes; i++) {
@@ -326,6 +336,8 @@ void ExceptionHandler(ExceptionType which) {
 				machine->ReadMem(userBufAddr + i, 1, &value);
 				kernelBuf[i] = (char)value;
 			}
+
+			DEBUG('f', "THE STRING FROM KERNEL SPACE IS %s\n", kernelBuf);
 
 			int bytesWritten = entry->file->Write(kernelBuf, numBytes);
 

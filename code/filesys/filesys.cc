@@ -78,6 +78,16 @@
 //	"format" -- should we initialize the disk?
 //----------------------------------------------------------------------
 
+void PrintOpenFileEntry(int item) {
+    OpenFileListEntry *entry = (OpenFileListEntry *) item;
+
+    ASSERT(entry != NULL);
+
+    DEBUG('f',"OpenFileEntry: sector = %d, file = %p\n",
+           entry->sector,
+           entry->file);
+}
+
 bool MatchSector(void* item, void* arg) {
     ASSERT(item != nullptr);
     OpenFileListEntry* entry = (OpenFileListEntry*) item;
@@ -274,6 +284,9 @@ FileSystem::Open(const char *path)
     DEBUG('f', "OpenFile pointer = %p\n", (void*)newEntry->file);
 
     openFileList->Append(newEntry);
+
+    openFileList->Mapcar(PrintOpenFileEntry);
+
     return openFile;
 }
 

@@ -194,3 +194,11 @@ OpenFile::Length()
 { 
     return hdr->FileLength(); 
 }
+
+int OpenFile::getSeek() {
+    return this->seekPosition;
+}
+
+void OpenFile::setSeek(int newSeek) {
+    this->seekPosition = newSeek;
+}
