@@ -33,6 +33,11 @@
 //    -l lists the contents of the Nachos directory
 //    -D prints the contents of the entire file system
 //    -t tests the performance of the Nachos file system
+//    -dirtest runs a number of tests, manipulating with the filesys
+//    -mkdir creates a directory
+//    -touch creates a file
+//    -cd changes the directory
+//    -rd removes a directory
 //
 //  NETWORK
 //    -n sets the network reliability

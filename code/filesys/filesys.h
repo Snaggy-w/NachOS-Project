@@ -72,7 +72,9 @@ class FileSystem {
 
 #else // FILESYS
 
-class OpenFileListEntry {
+/*Representation of an entry in the system descriptor table.*/
+
+class OpenFileListEntry { 
 	public:
 		OpenFile* file;
 		int sector; //the header sector of this file
@@ -117,7 +119,6 @@ class FileSystem {
 	bool deleteDirectory(const char* path);
 
   private:
-	//static bool isExistDirectory(Directory* dir);
    	OpenFile* freeMapFile;		// Bit map of free disk blocks,
 					// represented as a file
    	OpenFile* directoryFile;		// current directory open file
@@ -127,7 +128,6 @@ class FileSystem {
 	Directory* resolvePath(const char* path, char* lastName); // get directory based on the path to it
 
 	int getDirectorySector(const char* path, char* dirName);
-
 };
 #endif // FILESYS
 

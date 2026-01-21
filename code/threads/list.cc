@@ -296,6 +296,8 @@ int List::Size() {
 	return n;
 }
 
+//Returns the index of the element in the list if it exists.
+
 int List::isExistElement(void* elt) {
     int index = 0;
     for (ListElement* p = first; p != NULL; p = p->next) {
@@ -307,6 +309,7 @@ int List::isExistElement(void* elt) {
     return -1; 
 }
 
+//Using a predefined comparator, return the index of the element which respects the comparator criteria.
 
 int List::FindIf(ListComparator cmp, void* arg) {
     int index = 0;
@@ -319,6 +322,7 @@ int List::FindIf(ListComparator cmp, void* arg) {
     return -1;
 }
 
+//Return the element specified by "index".
 
 void *List::GetAt(int index){
 	if(index < 0)
