@@ -134,7 +134,7 @@ void Initialize(int argc, char **argv) {
             format = TRUE;
 #endif
 #ifdef NETWORK
-        if (!strcmp(*argv, "-l")) {
+        if (!strcmp(*argv, "-L")) {
             ASSERT(argc > 1);
             rely = atof(*(argv + 1));
             argCount = 2;

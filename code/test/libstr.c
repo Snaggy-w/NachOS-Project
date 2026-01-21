@@ -40,24 +40,6 @@ char *parse_str_cmd(int index, char *in_buff, char *out_buff, int MAX_LEN) {
     return (char *)0;
 }
 
-int atoi(const char *s)
-{
-    int n = 0;
-    int sign = 1;
-
-    if (*s == '-') {
-        sign = -1;
-        s++;
-    }
-
-    while (*s >= '0' && *s <= '9') {
-        n = n * 10 + (*s - '0');
-        s++;
-    }
-
-    return sign * n;
-}
-
 int str_cmp(const char *a, const char *b) {
     int i = 0;
 
@@ -69,7 +51,6 @@ int str_cmp(const char *a, const char *b) {
 
     return (unsigned char)a[i] - (unsigned char)b[i];
 }
-
 
 void strcpy(char *dst, const char *src, int cap) {
     int i = 0;

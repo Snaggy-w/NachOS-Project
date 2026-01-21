@@ -4,7 +4,6 @@ c91c62796d511930602b794c3c64a191  ../Makefile.define-origin
 3eeadebdd7bcf187d635084029906fc3  ../Makefile.rules-nachos
 698abf118aea3db409b50106d5c304b2  ../Makefile.sysdep
 51bcc5e4a890b1e2c6a364f8243f6eca  ../machine/console.h
-957bef8c17dbacc02f1d8d9855d05788  ../machine/disk.h
 7dd2eb99649328e3f3e2375d3d4459b0  ../machine/interrupt.h
 a4ce3276268e384880ebe7df2cace5fa  ../machine/mipssim.h
 58e2c44fb0de6e1b0e9743ed153efb25  ../machine/network.h
